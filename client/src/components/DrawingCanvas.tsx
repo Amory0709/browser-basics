@@ -196,6 +196,8 @@ export function DrawingCanvas({ strokes, doc, active, onToggle }: DrawingCanvasP
         <button type="button" className="btn-ghost" onClick={clearBoard}>
           Clear board
         </button>
+
+        {!active && <span className="drawing-hint">Click &quot;Start drawing&quot; to draw on the board</span>}
       </div>
 
       <canvas

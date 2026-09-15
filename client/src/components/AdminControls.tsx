@@ -24,10 +24,9 @@ export function AdminControls({
   const participants = users.filter((user) => user.name !== adminName);
 
   return (
-    <section className="admin-controls" aria-label="Admin follow controls">
+    <section className="admin-controls" aria-label="Presenter controls">
       <div className="admin-controls-header">
-        <strong>Follow controls</strong>
-        <span className="admin-badge">Admin</span>
+        <strong>Presenter</strong>
       </div>
 
       <label className="admin-global-toggle">
@@ -101,7 +100,7 @@ export function FollowBanner({ adminName, following }: FollowBannerProps) {
 
   return (
     <div className="follow-banner" role="status">
-      Following <strong>{adminName}</strong>&apos;s view
+      Synced to <strong>{adminName}</strong>&apos;s view
     </div>
   );
 }

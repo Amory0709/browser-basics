@@ -32,12 +32,6 @@ npm run dev
 
 Open two browser tabs with the same room name to test collaboration.
 
-### Admin access
-
-- Check **Join as admin** in the lobby and enter the admin key (default: `teach-admin`)
-- Or use `?admin=teach-admin` in the URL
-- Override with `VITE_ADMIN_KEY` at build time
-
 ## Deployment
 
 | Component | Platform | Notes |
@@ -83,6 +77,14 @@ scripts/             publish scripts
 | Variable | Purpose |
 |----------|---------|
 | `VITE_WS_URL` | WebSocket URL injected at frontend build time |
-| `VITE_ADMIN_KEY` | Admin key for host controls (default: `teach-admin`) |
 | `GITHUB_PAGES=true` | Sets Vite base to `/browser-basics/` in CI |
 | `PORT` | Injected by Render for the WebSocket server port |
+| `ADMIN_SECRET` | Server-only presenter token (set on the WebSocket service) |
+
+## Presenter access (private)
+
+Host controls are not shown in the lobby. Set a long random `ADMIN_SECRET` on the WebSocket server, then bookmark a URL like:
+
+`https://your-site.com/?room=your-room&_hk=YOUR_ADMIN_SECRET`
+
+The `_hk` parameter is removed from the address bar after verification. Share the normal room link (without `_hk`) with participants.

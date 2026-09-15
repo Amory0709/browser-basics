@@ -1,7 +1,8 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Lobby } from './components/Lobby';
 import { Playground } from './components/Playground';
-import { getAdminKeyFromUrl, isValidAdminKey, pickColor } from './lib/types';
+import { bootstrapHostAccess } from './lib/hostAuth';
+import { pickColor } from './lib/types';
 import { useYjsRoom } from './lib/useYjsRoom';
 
 function getInitialRoom(): string {
@@ -10,18 +11,26 @@ function getInitialRoom(): string {
 }
 
 export default function App() {
-  const [session, setSession] = useState<{ room: string; name: string; adminKey: string | null } | null>(
-    null,
-  );
+  const [session, setSession] = useState<{ room: string; name: string } | null>(null);
+  const [hostGranted, setHostGranted] = useState(false);
+  const [hostReady, setHostReady] = useState(false);
   const initialRoom = useMemo(() => getInitialRoom(), []);
-  const initialAdminKey = useMemo(() => getAdminKeyFromUrl(), []);
 
-  const room = useYjsRoom(
-    session?.room ?? '',
-    Boolean(session),
-    session?.name ?? '',
-    isValidAdminKey(session?.adminKey),
-  );
+  useEffect(() => {
+    let active = true;
+
+    void bootstrapHostAccess().then((granted) => {
+      if (!active) return;
+      setHostGranted(granted);
+      setHostReady(true);
+    });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const room = useYjsRoom(session?.room ?? '', Boolean(session), session?.name ?? '', hostGranted);
 
   const userColor = useMemo(() => {
     if (!session) return pickColor(0);
@@ -30,24 +39,31 @@ export default function App() {
     return pickColor(hash);
   }, [session]);
 
-  const join = (roomId: string, name: string, adminKey: string | null) => {
+  const join = (roomId: string, name: string) => {
     const url = new URL(window.location.href);
     url.searchParams.set('room', roomId);
-    if (adminKey) {
-      url.searchParams.set('admin', adminKey);
-    } else {
-      url.searchParams.delete('admin');
-    }
+    url.searchParams.delete('_hk');
+    url.searchParams.delete('admin');
     window.history.replaceState({}, '', url.toString());
-    setSession({ room: roomId, name, adminKey });
+    setSession({ room: roomId, name });
   };
 
   const leave = () => {
     setSession(null);
   };
 
+  if (!hostReady) {
+    return (
+      <div className="lobby">
+        <div className="lobby-card">
+          <p className="subtitle">Loading room…</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!session || !room) {
-    return <Lobby onJoin={join} initialRoom={initialRoom} initialAdminKey={initialAdminKey} />;
+    return <Lobby onJoin={join} initialRoom={initialRoom} />;
   }
 
   return (

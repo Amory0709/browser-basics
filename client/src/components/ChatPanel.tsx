@@ -90,15 +90,14 @@ export function ChatPanel({ messages, doc, author, userColor }: ChatPanelProps) 
 }
 
 type PresenceBarProps = {
-  users: { name: string; color: UserColor; isAdmin?: boolean }[];
+  users: { name: string; color: UserColor }[];
   connected: boolean;
   synced: boolean;
   room: string;
-  isAdmin?: boolean;
   onLeave: () => void;
 };
 
-export function PresenceBar({ users, connected, synced, room, isAdmin = false, onLeave }: PresenceBarProps) {
+export function PresenceBar({ users, connected, synced, room, onLeave }: PresenceBarProps) {
   const copyLink = async () => {
     const url = new URL(window.location.href);
     url.searchParams.set('room', room);
@@ -109,7 +108,6 @@ export function PresenceBar({ users, connected, synced, room, isAdmin = false, o
     <header className="presence-bar">
       <div className="presence-left">
         <strong>Room · {room}</strong>
-        {isAdmin && <span className="admin-badge">Admin</span>}
         <span className={`status-dot${connected ? ' online' : ''}`} aria-hidden="true" />
         <span className="status-text">
           {connected ? (synced ? 'Synced' : 'Syncing…') : 'Connecting…'}
@@ -120,11 +118,10 @@ export function PresenceBar({ users, connected, synced, room, isAdmin = false, o
         {users.map((user) => (
           <span
             key={user.name + user.color.cursor}
-            className={`presence-chip${user.isAdmin ? ' presence-chip-admin' : ''}`}
+            className="presence-chip"
             style={{ background: user.color.bg, color: user.color.text, borderColor: user.color.cursor }}
           >
             {user.name}
-            {user.isAdmin ? ' · Admin' : ''}
           </span>
         ))}
       </div>

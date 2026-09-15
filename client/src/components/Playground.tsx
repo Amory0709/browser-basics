@@ -72,8 +72,8 @@ export function Playground({ room, roomId, userName, userColor, onLeave }: Playg
   });
 
   useEffect(() => {
-    room.setLocalUser(userName, userColor, room.isAdmin);
-  }, [room, userName, userColor, room.isAdmin]);
+    room.setLocalUser(userName, userColor);
+  }, [room, userName, userColor]);
 
   useEffect(() => {
     const host = viewportHostRef.current;
@@ -106,7 +106,6 @@ export function Playground({ room, roomId, userName, userColor, onLeave }: Playg
         connected={room.connected}
         synced={room.synced}
         room={roomId}
-        isAdmin={room.isAdmin}
         onLeave={onLeave}
       />
 

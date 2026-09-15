@@ -29,7 +29,6 @@ export type AwarenessUser = {
   color: UserColor;
   cursor?: { x: number; y: number };
   viewport?: Viewport;
-  isAdmin?: boolean;
 };
 
 export type RoomMeta = {
@@ -89,21 +88,7 @@ export function getWsUrl(): string {
 export function getShareUrl(room: string): string {
   const url = new URL(window.location.href);
   url.searchParams.set('room', room);
+  url.searchParams.delete('_hk');
+  url.searchParams.delete('admin');
   return url.toString();
-}
-
-export function getAdminKeyFromUrl(): string | null {
-  const params = new URLSearchParams(window.location.search);
-  const key = params.get('admin')?.trim();
-  return key || null;
-}
-
-export function resolveAdminSecret(): string {
-  const fromEnv = import.meta.env.VITE_ADMIN_KEY as string | undefined;
-  return fromEnv?.trim() || 'teach-admin';
-}
-
-export function isValidAdminKey(key: string | null | undefined): boolean {
-  if (!key?.trim()) return false;
-  return key.trim() === resolveAdminSecret();
 }

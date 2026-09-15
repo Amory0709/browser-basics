@@ -1,29 +1,21 @@
 import { useState, type FormEvent } from 'react';
-import { getShareUrl, isValidAdminKey, pickColor, randomName } from '../lib/types';
+import { getShareUrl, pickColor, randomName } from '../lib/types';
 
 type LobbyProps = {
-  onJoin: (room: string, name: string, adminKey: string | null) => void;
+  onJoin: (room: string, name: string) => void;
   initialRoom?: string;
-  initialAdminKey?: string | null;
 };
 
-export function Lobby({ onJoin, initialRoom = 'learn-together', initialAdminKey = null }: LobbyProps) {
+export function Lobby({ onJoin, initialRoom = 'learn-together' }: LobbyProps) {
   const [room, setRoom] = useState(initialRoom);
   const [name, setName] = useState(() => randomName());
-  const [adminKey, setAdminKey] = useState(initialAdminKey ?? '');
-  const [joinAsAdmin, setJoinAsAdmin] = useState(Boolean(initialAdminKey));
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
     const trimmedRoom = room.trim();
     const trimmedName = name.trim();
     if (!trimmedRoom || !trimmedName) return;
-    const key = joinAsAdmin ? adminKey.trim() : '';
-    if (joinAsAdmin && !isValidAdminKey(key)) {
-      window.alert('Invalid admin key');
-      return;
-    }
-    onJoin(trimmedRoom, trimmedName, joinAsAdmin ? key : null);
+    onJoin(trimmedRoom, trimmedName);
   };
 
   return (
@@ -59,28 +51,6 @@ export function Lobby({ onJoin, initialRoom = 'learn-together', initialAdminKey 
               placeholder="e.g. math-study"
             />
           </label>
-
-          <label className="admin-join-toggle">
-            <input
-              type="checkbox"
-              checked={joinAsAdmin}
-              onChange={(e) => setJoinAsAdmin(e.target.checked)}
-            />
-            <span>Join as admin</span>
-          </label>
-
-          {joinAsAdmin && (
-            <label>
-              Admin key
-              <input
-                type="password"
-                value={adminKey}
-                onChange={(e) => setAdminKey(e.target.value)}
-                placeholder="Enter admin key"
-                autoComplete="off"
-              />
-            </label>
-          )}
 
           <button type="submit" className="btn-primary">
             Join room

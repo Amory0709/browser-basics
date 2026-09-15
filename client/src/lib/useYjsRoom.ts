@@ -19,7 +19,7 @@ export type YjsRoom = {
   isAdmin: boolean;
   roomMetaState: RoomMeta;
   shouldFollow: boolean;
-  setLocalUser: (name: string, color: UserColor, isAdmin: boolean) => void;
+  setLocalUser: (name: string, color: UserColor) => void;
   updateCursor: (x: number, y: number) => void;
   updateAdminViewport: (viewport: Viewport) => void;
   claimAdmin: (name: string) => void;
@@ -83,7 +83,7 @@ export function useYjsRoom(
   roomId: string,
   enabled: boolean,
   userName: string,
-  adminKeyValid: boolean,
+  hostGranted: boolean,
 ): YjsRoom | null {
   const [awarenessUsers, setAwarenessUsers] = useState<AwarenessUser[]>([]);
   const [connected, setConnected] = useState(false);
@@ -113,7 +113,7 @@ export function useYjsRoom(
   }, [enabled, roomId]);
 
   const isAdmin = Boolean(
-    bundle && adminKeyValid && roomMetaState.adminName && roomMetaState.adminName === userName,
+    bundle && hostGranted && roomMetaState.adminName && roomMetaState.adminName === userName,
   );
 
   const shouldFollow = bundle
@@ -152,7 +152,6 @@ export function useYjsRoom(
               color?: UserColor;
               cursor?: { x: number; y: number };
               viewport?: Viewport;
-              isAdmin?: boolean;
             }
           | undefined;
 
@@ -164,7 +163,6 @@ export function useYjsRoom(
           color: user.color,
           cursor: user.cursor,
           viewport: user.viewport,
-          isAdmin: user.isAdmin,
         });
       });
 
@@ -194,7 +192,7 @@ export function useYjsRoom(
 
   const claimAdmin = useCallback(
     (name: string) => {
-      if (!bundle || !adminKeyValid) return;
+      if (!bundle || !hostGranted) return;
 
       const current = bundle.roomMeta.get('adminName') as string | null | undefined;
       const adminOnline = awarenessUsers.some((user) => user.name === current);
@@ -208,21 +206,20 @@ export function useYjsRoom(
         }
       });
     },
-    [bundle, adminKeyValid, awarenessUsers],
+    [bundle, hostGranted, awarenessUsers],
   );
 
   useEffect(() => {
-    if (!bundle || !synced || !adminKeyValid) return;
+    if (!bundle || !synced || !hostGranted) return;
     claimAdmin(userName);
-  }, [bundle, synced, adminKeyValid, userName, claimAdmin]);
+  }, [bundle, synced, hostGranted, userName, claimAdmin]);
 
   const setLocalUser = useCallback(
-    (name: string, color: UserColor, admin: boolean) => {
+    (name: string, color: UserColor) => {
       if (!bundle) return;
       bundle.provider.awareness.setLocalStateField('user', {
         name,
         color,
-        isAdmin: admin,
         cursor: bundle.provider.awareness.getLocalState()?.user?.cursor,
         viewport: bundle.provider.awareness.getLocalState()?.user?.viewport ?? DEFAULT_VIEWPORT,
       });
