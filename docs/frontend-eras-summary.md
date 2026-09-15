@@ -2,8 +2,7 @@
 
 8 个时代的速查表。边界年份有重叠，时代之间是渐变不是硬切。
 
-> 每个时代的详细事件、代表技术与阅读建议见 [frontend-history-eras.md](frontend-history-eras.md)。  
-> 权威资料链接见 [frontend-references.md](frontend-references.md)。
+> Web 诞生故事见 [web-birth-story.md](web-birth-story.md)。
 
 ---
 
@@ -55,17 +54,6 @@ ES2015 重写 JS 语言基线，TypeScript 成为大厂默认，Webpack 统治�
 ### 8. 平台能力回归（2019–今）
 
 W3C/WHATWG 统一 HTML 标准。Container Queries、CSS Nesting、View Transitions 等原生能力逐渐替代 JS 方案。Baseline 与 Interop 成为跨浏览器一致性的显式目标。
-
----
-
-## 怎么读
-
-| 目的 | 推荐 |
-|------|------|
-| 理解 Web 为何诞生 | [web-birth-story.md](web-birth-story.md) → 时代 1 |
-| 快速查某段历史 | 本页总览表 → [frontend-history-eras.md](frontend-history-eras.md) 对应章节 |
-| 查资料来源 | [frontend-references.md](frontend-references.md) |
-| 跟踪当下动态 | [frontend-references.md](frontend-references.md) 第二节 |
 
 ---
 

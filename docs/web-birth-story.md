@@ -1,6 +1,6 @@
 # Web 诞生：CERN 的困境与 Tim 的答案
 
-> 故事版总结。技术细节与出处见 [frontend-references.md](frontend-references.md)；时代脉络见 [frontend-eras-summary.md](frontend-eras-summary.md)。
+> 故事版总结。时代脉络见 [frontend-eras-summary.md](frontend-eras-summary.md)。
 
 ---
 
