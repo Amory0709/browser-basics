@@ -79,7 +79,22 @@ export function createEmbedClient(): EmbedClient {
   };
 
   window.addEventListener('message', onParentMessage);
-  post({ type: 'EMBED_HANDSHAKE', embedId });
+
+  const sendHandshake = () => post({ type: 'EMBED_HANDSHAKE', embedId });
+  sendHandshake();
+  const handshakeTimer = window.setInterval(() => {
+    if (resolved) {
+      window.clearInterval(handshakeTimer);
+      return;
+    }
+    sendHandshake();
+  }, 400);
+  window.addEventListener('message', (event) => {
+    if (event.origin !== targetOrigin || !isParentMessage(event.data)) return;
+    if (event.data.type === 'EMBED_ACK' && event.data.embedId === embedId) {
+      window.clearInterval(handshakeTimer);
+    }
+  });
 
   const context: EmbedContext = {
     embedId,

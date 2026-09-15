@@ -10,17 +10,35 @@ export type BoardEmbed = {
   zIndex: number;
 };
 
+function isYMap(value: unknown): value is Y.Map<unknown> {
+  return (
+    value !== null &&
+    typeof value === 'object' &&
+    typeof (value as Y.Map<unknown>).get === 'function' &&
+    typeof (value as Y.Map<unknown>).set === 'function'
+  );
+}
+
+function isYArray(value: unknown): value is Y.Array<unknown> {
+  return (
+    value !== null &&
+    typeof value === 'object' &&
+    typeof (value as Y.Array<unknown>).toArray === 'function' &&
+    typeof (value as Y.Array<unknown>).push === 'function'
+  );
+}
+
 export function getBoardEmbeds(doc: Y.Doc): Y.Array<unknown> {
   const board = doc.getMap('board');
   const existing = board.get('embeds');
-  if (existing instanceof Y.Array) return existing;
+  if (isYArray(existing)) return existing;
   const created = new Y.Array();
   board.set('embeds', created);
   return created;
 }
 
 export function readBoardEmbed(value: unknown): BoardEmbed | null {
-  if (!(value instanceof Y.Map)) return null;
+  if (!isYMap(value)) return null;
   const id = value.get('id');
   const url = value.get('url');
   if (typeof id !== 'string' || typeof url !== 'string') return null;
@@ -69,7 +87,7 @@ export function updateBoardEmbed(
   doc.transact(() => {
     for (let i = 0; i < embeds.length; i++) {
       const entry = embeds.get(i);
-      if (!(entry instanceof Y.Map) || entry.get('id') !== id) continue;
+      if (!isYMap(entry) || entry.get('id') !== id) continue;
       if (patch.x !== undefined) entry.set('x', patch.x);
       if (patch.y !== undefined) entry.set('y', patch.y);
       if (patch.width !== undefined) entry.set('width', patch.width);
@@ -85,7 +103,7 @@ export function removeBoardEmbed(doc: Y.Doc, embeds: Y.Array<unknown>, id: strin
   doc.transact(() => {
     for (let i = 0; i < embeds.length; i++) {
       const entry = embeds.get(i);
-      if (entry instanceof Y.Map && entry.get('id') === id) {
+      if (isYMap(entry) && entry.get('id') === id) {
         embeds.delete(i, 1);
         return;
       }

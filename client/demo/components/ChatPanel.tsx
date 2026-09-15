@@ -90,7 +90,7 @@ export function ChatPanel({ messages, doc, author, userColor }: ChatPanelProps) 
 }
 
 type PresenceBarProps = {
-  users: { name: string; color: UserColor }[];
+  users: { clientId: number; name: string; color: UserColor }[];
   connected: boolean;
   synced: boolean;
   room: string;
@@ -117,7 +117,7 @@ export function PresenceBar({ users, connected, synced, room, onLeave }: Presenc
       <div className="presence-users" aria-label={`${users.length} online`}>
         {users.map((user) => (
           <span
-            key={user.name + user.color.cursor}
+            key={user.clientId}
             className="presence-chip"
             style={{ background: user.color.bg, color: user.color.text, borderColor: user.color.cursor }}
           >

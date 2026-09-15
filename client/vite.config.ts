@@ -43,6 +43,7 @@ export default defineConfig({
   plugins: [react(), coursesPlugin()],
   base: pagesBase,
   resolve: {
+    dedupe: ['yjs'],
     alias: {
       '@browser-basics/yjs-room': path.resolve(rootDir, '../packages/yjs-room/src/index.ts'),
       '@browser-basics/embed-sdk': path.resolve(rootDir, '../packages/embed-sdk/src/index.ts'),
