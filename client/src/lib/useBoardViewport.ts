@@ -9,17 +9,21 @@ function clampScale(scale: number): number {
   return Math.min(MAX_SCALE, Math.max(MIN_SCALE, scale));
 }
 
+function sameViewport(a: Viewport, b: Viewport): boolean {
+  return a.x === b.x && a.y === b.y && a.scale === b.scale;
+}
+
 type UseBoardViewportOptions = {
   isAdmin: boolean;
   shouldFollow: boolean;
-  adminViewport: Viewport | null;
+  remoteViewport: Viewport;
   onViewportChange: (viewport: Viewport) => void;
 };
 
 export function useBoardViewport({
   isAdmin,
   shouldFollow,
-  adminViewport,
+  remoteViewport,
   onViewportChange,
 }: UseBoardViewportOptions) {
   const [viewport, setViewport] = useState<Viewport>(DEFAULT_VIEWPORT);
@@ -38,9 +42,11 @@ export function useBoardViewport({
   );
 
   useEffect(() => {
-    if (!shouldFollow || !adminViewport) return;
-    setViewport(adminViewport);
-  }, [shouldFollow, adminViewport]);
+    if (!shouldFollow) return;
+    if (sameViewport(viewportRef.current, remoteViewport)) return;
+    viewportRef.current = remoteViewport;
+    setViewport(remoteViewport);
+  }, [shouldFollow, remoteViewport.x, remoteViewport.y, remoteViewport.scale, remoteViewport]);
 
   const bindViewportControls = useCallback(
     (element: HTMLElement | null) => {
@@ -68,7 +74,8 @@ export function useBoardViewport({
       };
 
       const onPointerDown = (event: PointerEvent) => {
-        if (event.button !== 1 && !event.altKey) return;
+        const canPan = event.button === 1 || event.button === 2 || event.altKey || event.buttons === 4;
+        if (!canPan) return;
         event.preventDefault();
         panning = true;
         lastX = event.clientX;
@@ -96,11 +103,16 @@ export function useBoardViewport({
         element.releasePointerCapture(event.pointerId);
       };
 
+      const onContextMenu = (event: MouseEvent) => {
+        event.preventDefault();
+      };
+
       element.addEventListener('wheel', onWheel, { passive: false });
       element.addEventListener('pointerdown', onPointerDown);
       element.addEventListener('pointermove', onPointerMove);
       element.addEventListener('pointerup', onPointerUp);
       element.addEventListener('pointercancel', onPointerUp);
+      element.addEventListener('contextmenu', onContextMenu);
 
       return () => {
         element.removeEventListener('wheel', onWheel);
@@ -108,14 +120,11 @@ export function useBoardViewport({
         element.removeEventListener('pointermove', onPointerMove);
         element.removeEventListener('pointerup', onPointerUp);
         element.removeEventListener('pointercancel', onPointerUp);
+        element.removeEventListener('contextmenu', onContextMenu);
       };
     },
     [applyViewport, isAdmin],
   );
-
-  const resetViewport = useCallback(() => {
-    applyViewport(DEFAULT_VIEWPORT);
-  }, [applyViewport]);
 
   const transformStyle = {
     transform: `translate(${viewport.x}px, ${viewport.y}px) scale(${viewport.scale})`,
@@ -126,7 +135,6 @@ export function useBoardViewport({
     viewport,
     transformStyle,
     bindViewportControls,
-    resetViewport,
     isFollowing: shouldFollow,
   };
 }

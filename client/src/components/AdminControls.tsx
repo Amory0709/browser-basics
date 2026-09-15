@@ -39,7 +39,7 @@ export function AdminControls({
         <span>全体跟随我的视角</span>
       </label>
 
-      <p className="admin-hint">滚轮缩放 · Alt+拖拽平移画布。单独开关覆盖全体设置。</p>
+      <p className="admin-hint">滚轮缩放 · 右键或 Alt+拖拽平移画布。单独开关覆盖全体设置。</p>
 
       {participants.length === 0 ? (
         <p className="admin-empty">暂无其他成员</p>

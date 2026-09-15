@@ -1,7 +1,6 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { YjsRoom } from '../lib/useYjsRoom';
 import type { UserColor, Viewport } from '../lib/types';
-import { DEFAULT_VIEWPORT } from '../lib/types';
 import { useBoardViewport } from '../lib/useBoardViewport';
 import { AdminControls, FollowBanner } from './AdminControls';
 import { ChatPanel, PresenceBar } from './ChatPanel';
@@ -57,35 +56,23 @@ export function Playground({ room, roomId, userName, userColor, onLeave }: Playg
   const viewportHostRef = useRef<HTMLDivElement>(null);
   const [drawingActive, setDrawingActive] = useState(false);
 
-  const adminViewport = useMemo(() => {
-    if (!room.adminClientId) return null;
-    const admin = room.awarenessUsers.find((user) => user.clientId === room.adminClientId);
-    return admin?.viewport ?? DEFAULT_VIEWPORT;
-  }, [room.adminClientId, room.awarenessUsers]);
-
   const onViewportChange = useCallback(
     (viewport: Viewport) => {
-      room.updateViewport(viewport);
+      room.updateAdminViewport(viewport);
     },
-    [room],
+    [room.updateAdminViewport],
   );
 
   const { viewport, transformStyle, bindViewportControls, isFollowing } = useBoardViewport({
     isAdmin: room.isAdmin,
     shouldFollow: room.shouldFollow,
-    adminViewport,
+    remoteViewport: room.roomMetaState.adminViewport,
     onViewportChange,
   });
 
   useEffect(() => {
     room.setLocalUser(userName, userColor, room.isAdmin);
   }, [room, userName, userColor, room.isAdmin]);
-
-  useEffect(() => {
-    if (room.isAdmin) {
-      room.updateViewport(DEFAULT_VIEWPORT);
-    }
-  }, [room.isAdmin, room.updateViewport]);
 
   useEffect(() => {
     const host = viewportHostRef.current;

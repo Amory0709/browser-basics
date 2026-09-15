@@ -35,6 +35,7 @@ export type AwarenessUser = {
 export type RoomMeta = {
   adminName: string | null;
   globalFollow: boolean;
+  adminViewport: Viewport;
 };
 
 export type StickyNoteData = {

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as Y from 'yjs';
 import { WebsocketProvider } from 'y-websocket';
 import type { AwarenessUser, RoomMeta, UserColor, Viewport } from './types';
@@ -19,20 +19,38 @@ export type YjsRoom = {
   isAdmin: boolean;
   roomMetaState: RoomMeta;
   shouldFollow: boolean;
-  adminClientId: number | null;
   setLocalUser: (name: string, color: UserColor, isAdmin: boolean) => void;
   updateCursor: (x: number, y: number) => void;
-  updateViewport: (viewport: Viewport) => void;
+  updateAdminViewport: (viewport: Viewport) => void;
   claimAdmin: (name: string) => void;
   setGlobalFollow: (enabled: boolean) => void;
   setUserFollow: (clientId: number, enabled: boolean) => void;
   clearUserFollow: (clientId: number) => void;
 };
 
+function readViewport(meta: Y.Map<unknown>): Viewport {
+  const nested = meta.get('adminViewport');
+  if (nested && typeof nested === 'object') {
+    const record = nested as Partial<Viewport>;
+    return {
+      x: typeof record.x === 'number' ? record.x : 0,
+      y: typeof record.y === 'number' ? record.y : 0,
+      scale: typeof record.scale === 'number' ? record.scale : 1,
+    };
+  }
+
+  return {
+    x: typeof meta.get('viewportX') === 'number' ? (meta.get('viewportX') as number) : 0,
+    y: typeof meta.get('viewportY') === 'number' ? (meta.get('viewportY') as number) : 0,
+    scale: typeof meta.get('viewportScale') === 'number' ? (meta.get('viewportScale') as number) : 1,
+  };
+}
+
 function readRoomMeta(meta: Y.Map<unknown>): RoomMeta {
   return {
     adminName: (meta.get('adminName') as string | null) ?? null,
     globalFollow: Boolean(meta.get('globalFollow')),
+    adminViewport: readViewport(meta),
   };
 }
 
@@ -61,6 +79,7 @@ export function useYjsRoom(
   const [roomMetaState, setRoomMetaState] = useState<RoomMeta>({
     adminName: null,
     globalFollow: false,
+    adminViewport: DEFAULT_VIEWPORT,
   });
   const [, followBump] = useState(0);
 
@@ -84,12 +103,6 @@ export function useYjsRoom(
   const isAdmin = Boolean(
     bundle && adminKeyValid && roomMetaState.adminName && roomMetaState.adminName === userName,
   );
-
-  const adminClientId = useMemo(() => {
-    if (!roomMetaState.adminName) return null;
-    const admin = awarenessUsers.find((user) => user.name === roomMetaState.adminName && user.isAdmin);
-    return admin?.clientId ?? null;
-  }, [awarenessUsers, roomMetaState.adminName]);
 
   const shouldFollow = bundle
     ? shouldUserFollow(bundle.provider.awareness.clientID, isAdmin, roomMetaState, bundle.followMap)
@@ -171,14 +184,19 @@ export function useYjsRoom(
     (name: string) => {
       if (!bundle || !adminKeyValid) return;
 
+      const current = bundle.roomMeta.get('adminName') as string | null | undefined;
+      const adminOnline = awarenessUsers.some((user) => user.name === current);
+
+      if (current && current !== name && adminOnline) return;
+
       bundle.doc.transact(() => {
-        const current = bundle.roomMeta.get('adminName') as string | null | undefined;
-        if (!current) {
-          bundle.roomMeta.set('adminName', name);
+        bundle.roomMeta.set('adminName', name);
+        if (!bundle.roomMeta.has('adminViewport')) {
+          bundle.roomMeta.set('adminViewport', DEFAULT_VIEWPORT);
         }
       });
     },
-    [bundle, adminKeyValid],
+    [bundle, adminKeyValid, awarenessUsers],
   );
 
   useEffect(() => {
@@ -212,16 +230,34 @@ export function useYjsRoom(
     [bundle],
   );
 
-  const updateViewport = useCallback(
+  const viewportFrame = useRef<number | null>(null);
+  const pendingViewport = useRef<Viewport | null>(null);
+
+  const updateAdminViewport = useCallback(
     (viewport: Viewport) => {
-      if (!bundle) return;
-      const current = bundle.provider.awareness.getLocalState()?.user ?? {};
-      bundle.provider.awareness.setLocalStateField('user', {
-        ...current,
-        viewport,
+      if (!bundle || !isAdmin) return;
+
+      pendingViewport.current = viewport;
+      if (viewportFrame.current !== null) return;
+
+      viewportFrame.current = requestAnimationFrame(() => {
+        viewportFrame.current = null;
+        const next = pendingViewport.current;
+        pendingViewport.current = null;
+        if (!next) return;
+
+        bundle.doc.transact(() => {
+          bundle.roomMeta.set('adminViewport', next);
+        });
+
+        const current = bundle.provider.awareness.getLocalState()?.user ?? {};
+        bundle.provider.awareness.setLocalStateField('user', {
+          ...current,
+          viewport: next,
+        });
       });
     },
-    [bundle],
+    [bundle, isAdmin],
   );
 
   const setGlobalFollow = useCallback(
@@ -265,10 +301,9 @@ export function useYjsRoom(
     isAdmin,
     roomMetaState,
     shouldFollow,
-    adminClientId,
     setLocalUser,
     updateCursor,
-    updateViewport,
+    updateAdminViewport,
     claimAdmin,
     setGlobalFollow,
     setUserFollow,
