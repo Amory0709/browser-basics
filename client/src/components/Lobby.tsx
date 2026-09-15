@@ -30,11 +30,13 @@ export function Lobby({
   return (
     <div className="lobby">
       <div className="lobby-card">
-        <p className="eyebrow">Yjs real-time collaboration</p>
-        <h1>Learn together, play together</h1>
+        <div className="lobby-brand">
+          <img src="/favicon.svg" alt="" className="lobby-logo" width={32} height={32} />
+          <p className="eyebrow">Real-time collaboration</p>
+        </div>
+        <h1>Learn together</h1>
         <p className="subtitle">
-          Multiplayer canvas: sticky notes, whiteboard drawing, live cursors, and chat. Share one room
-          link and jump in.
+          Shared canvas for courses, whiteboard, and live presence. One link, instant sync.
         </p>
 
         {hostGranted && (
@@ -80,10 +82,10 @@ export function Lobby({
         </form>
 
         <ul className="feature-list" aria-label="Features">
-          <li>📝 Drag sticky notes and edit together</li>
-          <li>🎨 Shared whiteboard drawing</li>
-          <li>👀 See live cursors from everyone</li>
-          <li>💬 Side chat for discussion</li>
+          <li>Collaborative sticky notes</li>
+          <li>Shared whiteboard drawing</li>
+          <li>Live cursors and presence</li>
+          <li>Side chat for discussion</li>
         </ul>
 
         {room.trim() && (

@@ -77,7 +77,12 @@ export default function App() {
     return (
       <div className="lobby">
         <div className="lobby-card">
-          <p className="subtitle">Loading room…</p>
+          <div className="lobby-brand">
+            <img src="/favicon.svg" alt="" className="lobby-logo" width={32} height={32} />
+            <p className="eyebrow">Real-time collaboration</p>
+          </div>
+          <p className="subtitle">Connecting…</p>
+          <span className="loading-pulse" aria-hidden="true" />
         </div>
       </div>
     );

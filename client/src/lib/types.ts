@@ -5,14 +5,14 @@ export type UserColor = {
 };
 
 export const USER_COLORS: UserColor[] = [
-  { bg: '#fef3c7', text: '#92400e', cursor: '#f59e0b' },
-  { bg: '#dbeafe', text: '#1e40af', cursor: '#3b82f6' },
-  { bg: '#dcfce7', text: '#166534', cursor: '#22c55e' },
-  { bg: '#fce7f3', text: '#9d174d', cursor: '#ec4899' },
-  { bg: '#ede9fe', text: '#5b21b6', cursor: '#8b5cf6' },
-  { bg: '#ffedd5', text: '#9a3412', cursor: '#f97316' },
-  { bg: '#ccfbf1', text: '#115e59', cursor: '#14b8a6' },
-  { bg: '#fee2e2', text: '#991b1b', cursor: '#ef4444' },
+  { bg: 'rgba(255, 107, 157, 0.14)', text: '#ffb3cc', cursor: '#ff6b9d' },
+  { bg: 'rgba(192, 132, 252, 0.14)', text: '#d4b8fc', cursor: '#c084fc' },
+  { bg: 'rgba(96, 165, 250, 0.14)', text: '#93c5fd', cursor: '#60a5fa' },
+  { bg: 'rgba(52, 211, 153, 0.14)', text: '#6ee7b7', cursor: '#34d399' },
+  { bg: 'rgba(251, 191, 36, 0.14)', text: '#fcd34d', cursor: '#fbbf24' },
+  { bg: 'rgba(244, 114, 182, 0.14)', text: '#f9a8d4', cursor: '#f472b6' },
+  { bg: 'rgba(45, 212, 191, 0.14)', text: '#5eead4', cursor: '#2dd4bf' },
+  { bg: 'rgba(167, 139, 250, 0.14)', text: '#c4b5fd', cursor: '#a78bfa' },
 ];
 
 export type { AwarenessUser, RoomMeta, Viewport } from '@browser-basics/yjs-room';
