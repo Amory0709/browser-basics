@@ -118,7 +118,17 @@ Tim 在 CERN 要解决的，是**复杂组织里信息如何不被时间和人�
 
 ## 延伸阅读
 
-- [Information Management: A Proposal（1989 原文）](https://www.w3.org/History/1989/proposal.html)
+### W3C 官方
+
+- [A Little History of the World Wide Web](https://www.w3.org/History.html) — W3C 官方 Web 时间线
+- [How It All Started: Pre-W3C Web and Internet Background](https://www.w3.org/2004/Talks/w3c10-HowItAllStarted/?n=25) — W3C 10 周年，Tim 口述 Web 起源
+
+### 1989 提案原文
+
+- [Information Management: A Proposal（HTML 版）](https://www.w3.org/History/1989/proposal.html)
+- [Information Management: A Proposal（带配图版）](https://www.w3.org/History/1989/proposal-msw.html) — 含 Client/Server、Gateway 等原始插图
+
+### 其他
+
 - [CERN 官方存档](https://repository.cern/records/6kxvc-v6203)
-- [W3C Web History](https://www.w3.org/History.html)
 - [Enquire 手册（1980）](https://www.w3.org/History/1980/Enquire/manual/)
