@@ -15,12 +15,7 @@ export const USER_COLORS: UserColor[] = [
   { bg: '#fee2e2', text: '#991b1b', cursor: '#ef4444' },
 ];
 
-export type AwarenessUser = {
-  clientId: number;
-  name: string;
-  color: UserColor;
-  cursor?: { x: number; y: number };
-};
+export type { AwarenessUser, RoomMeta, Viewport } from '@browser-basics/yjs-room';
 
 export type StickyNoteData = {
   id: string;
@@ -46,8 +41,8 @@ export type ChatMessage = {
 };
 
 export function randomName(): string {
-  const animals = ['熊猫', '狐狸', '海豚', '猫头鹰', '企鹅', '考拉', '松鼠', '兔子'];
-  const adj = ['好奇', '快乐', '专注', '活泼', '聪明', '勇敢', '温柔', '闪亮'];
+  const animals = ['Panda', 'Fox', 'Dolphin', 'Owl', 'Penguin', 'Koala', 'Squirrel', 'Bunny'];
+  const adj = ['Curious', 'Happy', 'Focused', 'Lively', 'Clever', 'Brave', 'Gentle', 'Bright'];
   const a = animals[Math.floor(Math.random() * animals.length)]!;
   const b = adj[Math.floor(Math.random() * adj.length)]!;
   return `${b}${a}${Math.floor(Math.random() * 90 + 10)}`;
@@ -57,21 +52,10 @@ export function pickColor(index: number): UserColor {
   return USER_COLORS[index % USER_COLORS.length]!;
 }
 
-export function getWsUrl(): string {
-  const fromEnv = import.meta.env.VITE_WS_URL as string | undefined;
-  if (fromEnv) return fromEnv;
-
-  if (typeof window !== 'undefined') {
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const host = window.location.hostname;
-    return `${protocol}//${host}:1234`;
-  }
-
-  return 'ws://localhost:1234';
-}
-
 export function getShareUrl(room: string): string {
   const url = new URL(window.location.href);
   url.searchParams.set('room', room);
+  url.searchParams.delete('_hk');
+  url.searchParams.delete('admin');
   return url.toString();
 }

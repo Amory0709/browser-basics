@@ -3,11 +3,12 @@
   "private": true,
   "workspaces": [
     "client",
-    "server"
+    "server",
+    "packages/yjs-room"
   ],
   "scripts": {
     "dev": "concurrently -n client,server -c cyan,magenta \"npm run dev -w client\" \"npm run dev -w server\"",
-    "build": "npm run build -w client",
+    "build": "npm run build -w @browser-basics/yjs-room && npm run build -w client",
     "build:render": "VITE_WS_URL=wss://browser-basics-ws.onrender.com npm run build -w client",
     "start": "npm run start -w server"
   },

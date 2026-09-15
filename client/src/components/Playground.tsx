@@ -1,41 +1,103 @@
-import { useEffect, useRef, useState } from 'react';
-import type { YjsRoom } from '../lib/useYjsRoom';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import type { CollabRoom, Viewport } from '@browser-basics/yjs-room';
+import { useBoardViewport } from '@browser-basics/yjs-room';
 import type { UserColor } from '../lib/types';
+import { AdminControls, FollowBanner } from './AdminControls';
 import { ChatPanel, PresenceBar } from './ChatPanel';
 import { DrawingCanvas } from './DrawingCanvas';
-import { bindCursorTracking, LiveCursors } from './LiveCursors';
+import { LiveCursors } from './LiveCursors';
 import { createStickyNote, StickyNotesLayer } from './StickyNotes';
 
 type PlaygroundProps = {
-  room: YjsRoom;
+  room: CollabRoom;
   roomId: string;
   userName: string;
   userColor: UserColor;
   onLeave: () => void;
 };
 
+function bindViewportCursorTracking(
+  element: HTMLElement,
+  viewport: Viewport,
+  updateCursor: (x: number, y: number) => void,
+): () => void {
+  let frame = 0;
+  let lastX = -1;
+  let lastY = -1;
+
+  const onMove = (event: MouseEvent) => {
+    const rect = element.getBoundingClientRect();
+    const x = (event.clientX - rect.left - viewport.x) / viewport.scale;
+    const y = (event.clientY - rect.top - viewport.y) / viewport.scale;
+
+    if (x === lastX && y === lastY) return;
+    lastX = x;
+    lastY = y;
+
+    cancelAnimationFrame(frame);
+    frame = requestAnimationFrame(() => updateCursor(x, y));
+  };
+
+  const onLeave = () => {
+    updateCursor(-9999, -9999);
+  };
+
+  element.addEventListener('mousemove', onMove);
+  element.addEventListener('mouseleave', onLeave);
+
+  return () => {
+    cancelAnimationFrame(frame);
+    element.removeEventListener('mousemove', onMove);
+    element.removeEventListener('mouseleave', onLeave);
+  };
+}
+
 export function Playground({ room, roomId, userName, userColor, onLeave }: PlaygroundProps) {
-  const boardRef = useRef<HTMLDivElement>(null);
+  const viewportHostRef = useRef<HTMLDivElement>(null);
+  const boardContentRef = useRef<HTMLDivElement>(null);
   const [drawingActive, setDrawingActive] = useState(false);
+
+  const onViewportChange = useCallback(
+    (viewport: Viewport) => {
+      room.updatePresenterViewport(viewport);
+    },
+    [room.updatePresenterViewport],
+  );
+
+  const { viewport, transformStyle, bindViewportControls, isFollowing } = useBoardViewport({
+    isPresenter: room.isPresenter,
+    shouldFollow: room.shouldFollow,
+    remoteViewport: room.roomMetaState.adminViewport,
+    onViewportChange,
+  });
 
   useEffect(() => {
     room.setLocalUser(userName, userColor);
   }, [room, userName, userColor]);
 
   useEffect(() => {
-    const board = boardRef.current;
-    if (!board) return;
-    return bindCursorTracking(board, room.updateCursor);
-  }, [room]);
+    const host = viewportHostRef.current;
+    if (!host) return;
+    return bindViewportControls(host);
+  }, [bindViewportControls]);
+
+  useEffect(() => {
+    const host = viewportHostRef.current;
+    if (!host) return;
+
+    return bindViewportCursorTracking(host, viewport, room.updateCursor);
+  }, [room.updateCursor, viewport]);
 
   const addNote = () => {
-    const board = boardRef.current;
-    const width = board?.clientWidth ?? 800;
-    const height = board?.clientHeight ?? 600;
+    const host = viewportHostRef.current;
+    const width = host?.clientWidth ?? 800;
+    const height = host?.clientHeight ?? 600;
     const x = 40 + Math.random() * Math.max(80, width - 280);
     const y = 40 + Math.random() * Math.max(80, height - 240);
     createStickyNote(room.doc, room.notes, userName, userColor.bg, x, y);
   };
+
+  const adminName = room.roomMetaState.adminName ?? userName;
 
   return (
     <div className="playground">
@@ -47,28 +109,44 @@ export function Playground({ room, roomId, userName, userColor, onLeave }: Playg
         onLeave={onLeave}
       />
 
+      <FollowBanner adminName={adminName} following={isFollowing} />
+
       <div className="playground-body">
         <main className="board-area">
-          <div ref={boardRef} className="board">
-            <DrawingCanvas
-              strokes={room.strokes}
-              doc={room.doc}
-              active={drawingActive}
-              onToggle={() => setDrawingActive((v) => !v)}
-            />
-            <StickyNotesLayer
-              notes={room.notes}
-              doc={room.doc}
-              author={userName}
-              userColor={userColor}
-              onAddNote={addNote}
-            />
-            <LiveCursors
-              users={room.awarenessUsers}
-              localClientId={room.localClientId}
-              containerRef={boardRef}
-            />
+          <div ref={viewportHostRef} className={`board-viewport${room.isPresenter ? ' admin-viewport' : ''}`}>
+            <div ref={boardContentRef} className="board-content" style={transformStyle}>
+              <DrawingCanvas
+                strokes={room.strokes}
+                doc={room.doc}
+                active={drawingActive}
+                onToggle={() => setDrawingActive((v) => !v)}
+              />
+              <StickyNotesLayer
+                notes={room.notes}
+                doc={room.doc}
+                author={userName}
+                userColor={userColor}
+                onAddNote={addNote}
+              />
+              <LiveCursors
+                users={room.awarenessUsers}
+                localClientId={room.localClientId}
+                containerRef={boardContentRef}
+              />
+            </div>
           </div>
+
+          {room.isPresenter && (
+            <AdminControls
+              users={room.awarenessUsers}
+              adminName={adminName}
+              roomMeta={room.roomMetaState}
+              followMap={room.followMap}
+              onGlobalFollowChange={room.setGlobalFollow}
+              onUserFollowChange={room.setUserFollow}
+              onUserFollowReset={room.clearUserFollow}
+            />
+          )}
         </main>
 
         <ChatPanel

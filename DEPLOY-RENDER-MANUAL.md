@@ -1,87 +1,79 @@
-# Render 手动部署（没有 Blueprint 时用）
+# Manual Render deployment (when Blueprint is unavailable)
 
-Blueprint 入口不在「Choose service」那页。若找不到 Blueprint，按下面 **两步** 手动建。
+Blueprint is not on the "Choose service" page. If you cannot find it, create the two services manually below.
 
----
+## Option A: Blueprint (recommended — creates both at once)
 
-## 方式 A：Blueprint（推荐，一次建两个）
-
-1. 回 Render 主页：https://dashboard.render.com
-2. 右上角 **New +** 下拉 → 选 **Blueprint**（不是 Static Site / Web Service）
-3. 或直接打开：https://dashboard.render.com/blueprint/new
-4. Connect GitHub → 选 **Amory0709/browser-basics**
-5. Blueprint Path 填：`render.yaml` → Apply
+1. Go to https://dashboard.render.com
+2. **New +** → **Blueprint** (not Static Site / Web Service)
+3. Or open https://dashboard.render.com/blueprint/new directly
+4. Connect GitHub → select **Amory0709/browser-basics**
+5. Blueprint path: `render.yaml` → Apply
 
 ---
 
-## 方式 B：手动建两个服务
+## Option B: Create two services manually
 
-### 第一步：Web Service（WebSocket）
+### Step 1: Web Service (WebSocket)
 
-1. 主页 **New +** → **Web Service**
-2. Connect 仓库 **Amory0709/browser-basics**
-3. 填：
+1. **New +** → **Web Service**
+2. Connect **Amory0709/browser-basics**
+3. Settings:
 
-| 字段 | 值 |
-|------|-----|
+| Field | Value |
+|-------|-------|
 | Name | `browser-basics-ws` |
-| Root Directory | `server` |
+| Root Directory | (empty) |
 | Runtime | Node |
 | Build Command | `npm install` |
-| Start Command | `node server.js` |
-| Plan | Free |
+| Start Command | `npm run start` |
 
-4. Advanced → Health Check Path：`/health`
-5. Create Web Service
+Note the URL, e.g. `https://browser-basics-ws.onrender.com`  
+WebSocket URL: `wss://browser-basics-ws.onrender.com`
 
-记下地址，形如：`https://browser-basics-ws.onrender.com`  
-WebSocket 用：`wss://browser-basics-ws.onrender.com`
-
-等状态变成 **Live** 再继续。
+Wait until status is **Live** before continuing.
 
 ---
 
-### 第二步：Static Site（前端）
+### Step 2: Static Site (frontend)
 
-1. 主页 **New +** → **Static Site**
-2. 同仓库 **Amory0709/browser-basics**
-3. 填：
+1. **New +** → **Static Site**
+2. Same repo **Amory0709/browser-basics**
+3. Settings:
 
-| 字段 | 值 |
-|------|-----|
+| Field | Value |
+|-------|-------|
 | Name | `browser-basics` |
-| Root Directory | 留空（仓库根目录） |
+| Root Directory | (empty — repo root) |
 | Build Command | `npm install && npm run build:render` |
 | Publish Directory | `client/dist` |
 
-4. 环境变量（Environment）加一条：
+4. Environment variable:
 
 | Key | Value |
 |-----|-------|
 | `VITE_WS_URL` | `wss://browser-basics-ws.onrender.com` |
 
-（若 WS 服务名不同，改成你的实际地址）
+(Use your actual WS URL if the service name differs.)
 
-5. Redirects/Rewrites（SPA 路由）加：
+5. Redirects/Rewrites (SPA):
 
 | Source | Destination |
 |--------|-------------|
 | `/*` | `/index.html` |
 
-6. Create Static Site
-
 ---
 
-## 验证
+## Verify
 
-1. 打开 Static Site 地址，例如 https://browser-basics.onrender.com
-2. 进房间，再开隐身窗口同房间
-3. 右上角应显示「已同步」，能看到彼此光标/便签
+1. Open the static site URL, e.g. https://browser-basics.onrender.com
+2. Join a room, then open an incognito window with the same room
+3. Header should show **Synced**; cursors and notes should appear
 
-## 常见问题
+## FAQ
 
-**一直连接中** → 先确认 `browser-basics-ws` 是 Live，浏览器 Network 里 WS 是否连上。
+**Stuck on Connecting** → Confirm `browser-basics-ws` is Live; check WS in browser Network tab.
 
-**免费层 sleep** → 15 分钟无人访问会休眠，首开多等 ~30 秒。
+**Free tier sleep** → No traffic for 15 minutes puts the service to sleep; first load may take ~30 seconds.
 
-**Build 失败** → 看 Render Logs；常见是 Root Directory 填错。
+**Build failed** → Check Render logs; wrong Root Directory is a common cause.

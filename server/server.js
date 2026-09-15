@@ -1,12 +1,21 @@
+import 'dotenv/config';
 import { createServer } from 'http';
 import { WebSocketServer } from 'ws';
 import { setupWSConnection } from '@y/websocket-server/utils';
+import { handleHostAuthRequest } from '@browser-basics/yjs-room/server';
 
 const PORT = Number(process.env.PORT ?? 1234);
 const HOST = process.env.HOST ?? '0.0.0.0';
+const ADMIN_SECRET = process.env.ADMIN_SECRET?.trim() ?? '';
 
 const server = createServer((req, res) => {
-  if (req.url === '/' || req.url === '/health') {
+  if (handleHostAuthRequest(req, res, ADMIN_SECRET)) {
+    return;
+  }
+
+  const requestUrl = new URL(req.url ?? '/', `http://${req.headers.host ?? 'localhost'}`);
+
+  if (requestUrl.pathname === '/' || requestUrl.pathname === '/health') {
     res.writeHead(200, { 'Content-Type': 'text/plain' });
     res.end('ok');
     return;
@@ -24,4 +33,7 @@ wss.on('connection', (ws, req) => {
 
 server.listen(PORT, HOST, () => {
   console.log(`Yjs WebSocket server running on http://${HOST}:${PORT}`);
+  if (!ADMIN_SECRET) {
+    console.warn('ADMIN_SECRET is not set — host controls are disabled.');
+  }
 });
