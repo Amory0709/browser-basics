@@ -57,10 +57,10 @@ export function ChatPanel({ messages, doc, author, userColor }: ChatPanelProps) 
   };
 
   return (
-    <aside className="chat-panel" aria-label="房间聊天">
-      <h2>讨论区</h2>
+    <aside className="chat-panel" aria-label="Room chat">
+      <h2>Chat</h2>
       <ul ref={listRef} className="chat-list">
-        {items.length === 0 && <li className="chat-empty">还没有消息，打个招呼吧 👋</li>}
+        {items.length === 0 && <li className="chat-empty">No messages yet. Say hello!</li>}
         {items.map((msg) => (
           <li key={msg.id} className="chat-item">
             <span className="chat-author" style={{ color: msg.color }}>
@@ -72,17 +72,17 @@ export function ChatPanel({ messages, doc, author, userColor }: ChatPanelProps) 
       </ul>
       <form className="chat-form" onSubmit={send}>
         <label className="sr-only" htmlFor="chat-input">
-          发送消息
+          Send message
         </label>
         <input
           id="chat-input"
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
-          placeholder="提问、分享、鼓励队友…"
+          placeholder="Ask, share, cheer on teammates…"
           maxLength={500}
         />
         <button type="submit" className="btn-primary">
-          发送
+          Send
         </button>
       </form>
     </aside>
@@ -108,15 +108,15 @@ export function PresenceBar({ users, connected, synced, room, isAdmin = false, o
   return (
     <header className="presence-bar">
       <div className="presence-left">
-        <strong>房间 · {room}</strong>
-        {isAdmin && <span className="admin-badge">管理员</span>}
+        <strong>Room · {room}</strong>
+        {isAdmin && <span className="admin-badge">Admin</span>}
         <span className={`status-dot${connected ? ' online' : ''}`} aria-hidden="true" />
         <span className="status-text">
-          {connected ? (synced ? '已同步' : '同步中…') : '连接中…'}
+          {connected ? (synced ? 'Synced' : 'Syncing…') : 'Connecting…'}
         </span>
       </div>
 
-      <div className="presence-users" aria-label={`在线 ${users.length} 人`}>
+      <div className="presence-users" aria-label={`${users.length} online`}>
         {users.map((user) => (
           <span
             key={user.name + user.color.cursor}
@@ -124,17 +124,17 @@ export function PresenceBar({ users, connected, synced, room, isAdmin = false, o
             style={{ background: user.color.bg, color: user.color.text, borderColor: user.color.cursor }}
           >
             {user.name}
-            {user.isAdmin ? ' · 管理员' : ''}
+            {user.isAdmin ? ' · Admin' : ''}
           </span>
         ))}
       </div>
 
       <div className="presence-actions">
         <button type="button" className="btn-ghost" onClick={() => void copyLink()}>
-          复制链接
+          Copy link
         </button>
         <button type="button" className="btn-ghost" onClick={onLeave}>
-          离开
+          Leave
         </button>
       </div>
     </header>

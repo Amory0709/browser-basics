@@ -1,80 +1,88 @@
 # browser-basics
 
-多人实时协作学习 playground — Yjs 便签、涂鸦、光标、聊天。同一房间链接，一起玩一起学。
+Real-time collaborative learning playground — Yjs sticky notes, drawing, cursors, and chat. Share one room link and learn together.
 
-在线地址（部署后）：https://browser-basics.onrender.com （Render）或 https://Amory0709.github.io/browser-basics/ （GitHub Pages）
+Live (after deploy): https://browser-basics.onrender.com (Render) or https://Amory0709.github.io/browser-basics/ (GitHub Pages)
 
-## 技术栈
+## Stack
 
-- **前端**: React + TypeScript + Vite → GitHub Pages
-- **同步**: [Yjs](https://yjs.dev) CRDT
-- **WebSocket**: `@y/websocket-server` → [Render](https://render.com) 免费层
+- **Frontend**: React + TypeScript + Vite → GitHub Pages
+- **Sync**: [Yjs](https://yjs.dev) CRDT
+- **WebSocket**: `@y/websocket-server` → [Render](https://render.com) free tier
 
-## 功能
+## Features
 
-- 房间制：同房间名 = 同文档
-- 便签：拖拽 + 多人同时编辑（Y.Text）
-- 涂鸦：共享画板（Y.Array）
-- 光标：Awareness 广播远端指针
-- 聊天：侧边讨论区
-- 在线列表 + 复制邀请链接
+- Rooms: same room name = same document
+- Sticky notes: drag + multi-user editing (Y.Text)
+- Drawing: shared whiteboard (Y.Array)
+- Cursors: Awareness broadcasts remote pointers
+- Chat: side panel discussion
+- Online list + copy invite link
+- Admin role: control who follows your viewport
 
-## 本地运行
+## Local development
 
 ```bash
 npm install
 npm run dev
 ```
 
-- 前端: http://localhost:5173
+- Frontend: http://localhost:5173
 - WebSocket: ws://localhost:1234
 
-开两个浏览器 tab，同房间名即可联调。
+Open two browser tabs with the same room name to test collaboration.
 
-## 部署架构
+### Admin access
 
-| 组件 | 平台 | 说明 |
-|------|------|------|
-| 前端静态文件 | GitHub Pages | push 到 `main` 自动构建 |
-| WebSocket 服务 | Render | `render.yaml` 一键部署 |
+- Check **Join as admin** in the lobby and enter the admin key (default: `teach-admin`)
+- Or use `?admin=teach-admin` in the URL
+- Override with `VITE_ADMIN_KEY` at build time
 
-### 1. 推送到 GitHub
+## Deployment
+
+| Component | Platform | Notes |
+|-----------|----------|-------|
+| Static frontend | GitHub Pages | Auto-build on push to `main` |
+| WebSocket server | Render | One-click via `render.yaml` |
+
+### 1. Push to GitHub
 
 ```bash
-export GITHUB_TOKEN=ghp_xxxx   # repo 权限
+export GITHUB_TOKEN=ghp_xxxx   # repo scope
 bash scripts/publish-github.sh
 ```
 
-### 2. 部署 WebSocket（Render）
+### 2. Deploy WebSocket (Render)
 
-1. 打开 https://dashboard.render.com
-2. New → Blueprint → 连接 `mhan8/browser-basics` 仓库
-3. Render 会读取根目录 `render.yaml`，创建 `browser-basics-ws` 服务
-4. 记下服务 URL，例如 `wss://browser-basics-ws.onrender.com`
+1. Open https://dashboard.render.com
+2. New → Blueprint → connect `mhan8/browser-basics`
+3. Render reads `render.yaml` and creates the `browser-basics-ws` service
+4. Note the service URL, e.g. `wss://browser-basics-ws.onrender.com`
 
-### 3. 配置前端 WebSocket 地址
+### 3. Configure frontend WebSocket URL
 
-在 GitHub 仓库 **Settings → Secrets and variables → Actions → Variables** 添加：
+In GitHub **Settings → Secrets and variables → Actions → Variables**, add:
 
-- 名称：`VITE_WS_URL`
-- 值：`wss://browser-basics-ws.onrender.com`（换成你的 Render 地址）
+- Name: `VITE_WS_URL`
+- Value: `wss://browser-basics-ws.onrender.com` (your Render URL)
 
-然后 **Actions → Deploy GitHub Pages → Run workflow**，或再 push 一次触发 rebuild。
+Then run **Actions → Deploy GitHub Pages → Run workflow**, or push again to trigger a rebuild.
 
-## 项目结构
+## Project structure
 
 ```
-client/              React 前端
-server/              Yjs WebSocket 服务
+client/              React frontend
+server/              Yjs WebSocket server
 .github/workflows/   GitHub Pages CI
-render.yaml          Render 部署配置
-scripts/             发布脚本
+render.yaml          Render deployment config
+scripts/             publish scripts
 ```
 
-## 环境变量
+## Environment variables
 
-| 变量 | 用途 |
-|------|------|
-| `VITE_WS_URL` | 前端 build 时注入 WebSocket 地址 |
-| `GITHUB_PAGES=true` | CI 中设置 Vite base 为 `/browser-basics/` |
-| `PORT` | Render 注入，WebSocket 服务端口 |
+| Variable | Purpose |
+|----------|---------|
+| `VITE_WS_URL` | WebSocket URL injected at frontend build time |
+| `VITE_ADMIN_KEY` | Admin key for host controls (default: `teach-admin`) |
+| `GITHUB_PAGES=true` | Sets Vite base to `/browser-basics/` in CI |
+| `PORT` | Injected by Render for the WebSocket server port |

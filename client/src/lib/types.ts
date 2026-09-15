@@ -62,8 +62,8 @@ export type ChatMessage = {
 };
 
 export function randomName(): string {
-  const animals = ['熊猫', '狐狸', '海豚', '猫头鹰', '企鹅', '考拉', '松鼠', '兔子'];
-  const adj = ['好奇', '快乐', '专注', '活泼', '聪明', '勇敢', '温柔', '闪亮'];
+  const animals = ['Panda', 'Fox', 'Dolphin', 'Owl', 'Penguin', 'Koala', 'Squirrel', 'Bunny'];
+  const adj = ['Curious', 'Happy', 'Focused', 'Lively', 'Clever', 'Brave', 'Gentle', 'Bright'];
   const a = animals[Math.floor(Math.random() * animals.length)]!;
   const b = adj[Math.floor(Math.random() * adj.length)]!;
   return `${b}${a}${Math.floor(Math.random() * 90 + 10)}`;

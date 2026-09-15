@@ -20,7 +20,7 @@ export function Lobby({ onJoin, initialRoom = 'learn-together', initialAdminKey 
     if (!trimmedRoom || !trimmedName) return;
     const key = joinAsAdmin ? adminKey.trim() : '';
     if (joinAsAdmin && !isValidAdminKey(key)) {
-      window.alert('管理员密钥不正确');
+      window.alert('Invalid admin key');
       return;
     }
     onJoin(trimmedRoom, trimmedName, joinAsAdmin ? key : null);
@@ -29,33 +29,34 @@ export function Lobby({ onJoin, initialRoom = 'learn-together', initialAdminKey 
   return (
     <div className="lobby">
       <div className="lobby-card">
-        <p className="eyebrow">Yjs 实时协作</p>
-        <h1>一起玩，一起学</h1>
+        <p className="eyebrow">Yjs real-time collaboration</p>
+        <h1>Learn together, play together</h1>
         <p className="subtitle">
-          多人同屏：便签 brainstorm、白板涂鸦、实时光标、聊天讨论。打开同一个房间链接就能加入。
+          Multiplayer canvas: sticky notes, whiteboard drawing, live cursors, and chat. Share one room
+          link and jump in.
         </p>
 
         <form className="lobby-form" onSubmit={handleSubmit}>
           <label>
-            昵称
+            Display name
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
               maxLength={24}
               required
               autoComplete="nickname"
-              placeholder="给自己起个名字"
+              placeholder="Pick a name"
             />
           </label>
 
           <label>
-            房间名
+            Room name
             <input
               value={room}
               onChange={(e) => setRoom(e.target.value)}
               maxLength={48}
               required
-              placeholder="例如 math-study"
+              placeholder="e.g. math-study"
             />
           </label>
 
@@ -65,37 +66,37 @@ export function Lobby({ onJoin, initialRoom = 'learn-together', initialAdminKey 
               checked={joinAsAdmin}
               onChange={(e) => setJoinAsAdmin(e.target.checked)}
             />
-            <span>以管理员身份进入</span>
+            <span>Join as admin</span>
           </label>
 
           {joinAsAdmin && (
             <label>
-              管理员密钥
+              Admin key
               <input
                 type="password"
                 value={adminKey}
                 onChange={(e) => setAdminKey(e.target.value)}
-                placeholder="输入管理员密钥"
+                placeholder="Enter admin key"
                 autoComplete="off"
               />
             </label>
           )}
 
           <button type="submit" className="btn-primary">
-            进入房间
+            Join room
           </button>
         </form>
 
-        <ul className="feature-list" aria-label="功能介绍">
-          <li>📝 拖拽便签，多人同时编辑文字</li>
-          <li>🎨 共享画板，一起涂涂画画</li>
-          <li>👀 看到彼此光标，知道谁在做什么</li>
-          <li>💬 侧边聊天，讨论问题</li>
+        <ul className="feature-list" aria-label="Features">
+          <li>📝 Drag sticky notes and edit together</li>
+          <li>🎨 Shared whiteboard drawing</li>
+          <li>👀 See live cursors from everyone</li>
+          <li>💬 Side chat for discussion</li>
         </ul>
 
         {room.trim() && (
           <p className="hint">
-            分享链接：
+            Share link:
             <code>{getShareUrl(room.trim())}</code>
           </p>
         )}

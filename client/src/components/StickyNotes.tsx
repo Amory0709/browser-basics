@@ -65,7 +65,7 @@ export function StickyNote({ noteMap, doc, author, onDelete, onMove }: StickyNot
     >
       <header>
         <span>{noteAuthor}</span>
-        <button type="button" onClick={onDelete} aria-label="删除便签">
+        <button type="button" onClick={onDelete} aria-label="Delete note">
           ×
         </button>
       </header>
@@ -75,8 +75,8 @@ export function StickyNote({ noteMap, doc, author, onDelete, onMove }: StickyNot
           setText(e.target.value);
           writeYText(doc, noteMap, e.target.value);
         }}
-        placeholder="写下想法、问题或知识点…"
-        aria-label="便签内容"
+        placeholder="Ideas, questions, or key points…"
+        aria-label="Note content"
       />
     </div>
   );
@@ -125,9 +125,9 @@ export function StickyNotesLayer({ notes, doc, author, userColor, onAddNote }: S
         className="fab-add-note"
         onClick={onAddNote}
         style={{ borderColor: userColor.cursor, color: userColor.text }}
-        aria-label="添加便签"
+        aria-label="Add note"
       >
-        + 便签
+        + Note
       </button>
     </>
   );

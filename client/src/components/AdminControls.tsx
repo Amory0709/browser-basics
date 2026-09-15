@@ -24,10 +24,10 @@ export function AdminControls({
   const participants = users.filter((user) => user.name !== adminName);
 
   return (
-    <section className="admin-controls" aria-label="管理员跟随控制">
+    <section className="admin-controls" aria-label="Admin follow controls">
       <div className="admin-controls-header">
-        <strong>跟随控制</strong>
-        <span className="admin-badge">管理员</span>
+        <strong>Follow controls</strong>
+        <span className="admin-badge">Admin</span>
       </div>
 
       <label className="admin-global-toggle">
@@ -36,13 +36,15 @@ export function AdminControls({
           checked={roomMeta.globalFollow}
           onChange={(e) => onGlobalFollowChange(e.target.checked)}
         />
-        <span>全体跟随我的视角</span>
+        <span>Everyone follows my view</span>
       </label>
 
-      <p className="admin-hint">滚轮缩放 · 右键或 Alt+拖拽平移画布。单独开关覆盖全体设置。</p>
+      <p className="admin-hint">
+        Scroll to zoom · right-click or Alt+drag to pan. Per-user toggles override the global setting.
+      </p>
 
       {participants.length === 0 ? (
-        <p className="admin-empty">暂无其他成员</p>
+        <p className="admin-empty">No other participants yet</p>
       ) : (
         <ul className="admin-user-list">
           {participants.map((user) => {
@@ -68,7 +70,7 @@ export function AdminControls({
                     checked={following}
                     onChange={(e) => onUserFollowChange(user.clientId, e.target.checked)}
                   />
-                  <span>跟随</span>
+                  <span>Follow</span>
                 </label>
 
                 {followMap.has(String(user.clientId)) && (
@@ -77,7 +79,7 @@ export function AdminControls({
                     className="btn-ghost admin-reset"
                     onClick={() => onUserFollowReset(user.clientId)}
                   >
-                    恢复默认
+                    Reset
                   </button>
                 )}
               </li>
@@ -99,7 +101,7 @@ export function FollowBanner({ adminName, following }: FollowBannerProps) {
 
   return (
     <div className="follow-banner" role="status">
-      正在跟随 <strong>{adminName}</strong> 的视角
+      Following <strong>{adminName}</strong>&apos;s view
     </div>
   );
 }

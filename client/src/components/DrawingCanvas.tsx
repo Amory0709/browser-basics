@@ -128,11 +128,11 @@ export function DrawingCanvas({ strokes, doc, active, onToggle }: DrawingCanvasP
           onClick={onToggle}
           aria-pressed={active}
         >
-          {active ? '✏️ 正在涂鸦' : '🖊️ 开启涂鸦'}
+          {active ? '✏️ Drawing' : '🖊️ Start drawing'}
         </button>
 
         <fieldset className="color-picker" disabled={!active}>
-          <legend className="sr-only">画笔颜色</legend>
+          <legend className="sr-only">Brush color</legend>
           {COLORS.map((c) => (
             <button
               key={c}
@@ -140,14 +140,14 @@ export function DrawingCanvas({ strokes, doc, active, onToggle }: DrawingCanvasP
               className={color === c ? 'swatch active' : 'swatch'}
               style={{ background: c }}
               onClick={() => setColor(c)}
-              aria-label={`颜色 ${c}`}
+              aria-label={`Color ${c}`}
               aria-pressed={color === c}
             />
           ))}
         </fieldset>
 
         <label className="width-slider">
-          粗细
+          Width
           <input
             type="range"
             min={2}
@@ -159,7 +159,7 @@ export function DrawingCanvas({ strokes, doc, active, onToggle }: DrawingCanvasP
         </label>
 
         <button type="button" className="btn-ghost" onClick={clearBoard}>
-          清空画板
+          Clear board
         </button>
       </div>
 
@@ -169,7 +169,7 @@ export function DrawingCanvas({ strokes, doc, active, onToggle }: DrawingCanvasP
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
-        aria-label="共享涂鸦画板"
+        aria-label="Shared drawing board"
       />
     </div>
   );
