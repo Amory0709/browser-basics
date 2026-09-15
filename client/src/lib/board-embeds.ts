@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import * as Y from 'yjs';
 
 export type BoardEmbed = {
@@ -31,7 +32,9 @@ function isYArray(value: unknown): value is Y.Array<unknown> {
 export function getBoardEmbeds(doc: Y.Doc): Y.Array<unknown> {
   const board = doc.getMap('board');
   const existing = board.get('embeds');
-  if (isYArray(existing)) return existing;
+  if (existing !== undefined && existing !== null) {
+    return existing as Y.Array<unknown>;
+  }
   const created = new Y.Array();
   board.set('embeds', created);
   return created;
@@ -97,6 +100,20 @@ export function updateBoardEmbed(
       return;
     }
   });
+}
+
+export function useBoardEmbeds(doc: Y.Doc): BoardEmbed[] {
+  const [revision, setRevision] = useState(0);
+
+  useEffect(() => {
+    const board = doc.getMap('board');
+    const bump = () => setRevision((n) => n + 1);
+    board.observeDeep(bump);
+    return () => board.unobserveDeep(bump);
+  }, [doc]);
+
+  void revision;
+  return listBoardEmbeds(getBoardEmbeds(doc));
 }
 
 export function removeBoardEmbed(doc: Y.Doc, embeds: Y.Array<unknown>, id: string): void {

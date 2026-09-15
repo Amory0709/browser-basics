@@ -1,13 +1,13 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { CollabRoom, Viewport } from '@browser-basics/yjs-room';
-import { useBoardViewport, useYArrayValues } from '@browser-basics/yjs-room';
+import { useBoardViewport } from '@browser-basics/yjs-room';
 import type { UserColor } from '../lib/types';
 import {
   createBoardEmbed,
   getBoardEmbeds,
-  listBoardEmbeds,
   removeBoardEmbed,
   updateBoardEmbed,
+  useBoardEmbeds,
 } from '../lib/board-embeds';
 import { AdminControls, FollowBanner } from './AdminControls';
 import { EmbedHostFrame } from './EmbedHost';
@@ -38,12 +38,7 @@ function newEmbedId(): string {
 
 export function Board({ room, roomId, userName, userColor, onLeave }: BoardProps) {
   const viewportHostRef = useRef<HTMLDivElement>(null);
-  const embedsArray = useMemo(() => getBoardEmbeds(room.doc), [room.doc]);
-  const embedRevision = useYArrayValues<unknown>(embedsArray);
-  const normalizedEmbeds = useMemo(
-    () => listBoardEmbeds(embedsArray),
-    [embedsArray, embedRevision],
-  );
+  const normalizedEmbeds = useBoardEmbeds(room.doc);
   const [drag, setDrag] = useState<DragState | null>(null);
 
   const onViewportChange = useCallback(
@@ -74,6 +69,7 @@ export function Board({ room, roomId, userName, userColor, onLeave }: BoardProps
 
   useEffect(() => {
     if (!drag) return;
+    const embedsArray = getBoardEmbeds(room.doc);
 
     const onMove = (event: PointerEvent) => {
       const dx = (event.clientX - drag.startX) / viewport.scale;
@@ -100,9 +96,10 @@ export function Board({ room, roomId, userName, userColor, onLeave }: BoardProps
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('pointerup', onUp);
     };
-  }, [drag, embedsArray, room.doc, viewport.scale]);
+  }, [drag, room.doc, viewport.scale]);
 
   const addHelloEmbed = () => {
+    const embedsArray = getBoardEmbeds(room.doc);
     createBoardEmbed(room.doc, embedsArray, {
       id: newEmbedId(),
       url: '/courses/hello/index.html',
@@ -151,7 +148,7 @@ export function Board({ room, roomId, userName, userColor, onLeave }: BoardProps
                         type="button"
                         className="board-embed-remove"
                         aria-label="Remove embed"
-                        onClick={() => removeBoardEmbed(room.doc, embedsArray, embed.id)}
+                        onClick={() => removeBoardEmbed(room.doc, getBoardEmbeds(room.doc), embed.id)}
                       >
                         ×
                       </button>
