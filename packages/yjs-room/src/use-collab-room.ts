@@ -7,12 +7,14 @@ import {
   readRoomMeta,
   shouldUserFollow,
   writePresenterViewport,
+  writeSessionMode,
 } from './room-meta.js';
 import type {
   AwarenessUser,
   CollabRoom,
   CollabRoomCollections,
   RoomMeta,
+  SessionMode,
   UserColor,
   Viewport,
 } from './types.js';
@@ -68,8 +70,11 @@ export function useCollabRoom({
   const [synced, setSynced] = useState(false);
   const [roomMetaState, setRoomMetaState] = useState<RoomMeta>({
     adminName: null,
+    presenterName: null,
+    sessionMode: 'free',
     globalFollow: false,
     adminViewport: DEFAULT_VIEWPORT,
+    presenterViewport: DEFAULT_VIEWPORT,
   });
   const [, followBump] = useState(0);
 
@@ -79,7 +84,9 @@ export function useCollabRoom({
   }, [collections, enabled, roomId, wsUrl]);
 
   const isPresenter = Boolean(
-    bundle && hostGranted && roomMetaState.adminName && roomMetaState.adminName === userName,
+    bundle &&
+      hostGranted &&
+      (!roomMetaState.adminName || roomMetaState.adminName === userName),
   );
 
   const shouldFollow = bundle
@@ -109,7 +116,7 @@ export function useCollabRoom({
 
     const refreshAwareness = () => {
       const states = provider.awareness.getStates();
-      const users: AwarenessUser[] = [];
+      const parsed: AwarenessUser[] = [];
 
       states.forEach((state, clientId) => {
         const user = state.user as
@@ -123,13 +130,21 @@ export function useCollabRoom({
 
         if (!user?.name || !user.color) return;
 
-        users.push({
+        parsed.push({
           clientId,
           name: user.name,
           color: user.color,
           cursor: user.cursor,
           viewport: user.viewport,
         });
+      });
+
+      parsed.sort((a, b) => b.clientId - a.clientId);
+      const seenNames = new Set<string>();
+      const users = parsed.filter((user) => {
+        if (seenNames.has(user.name)) return false;
+        seenNames.add(user.name);
+        return true;
       });
 
       setAwarenessUsers(users);
@@ -151,6 +166,7 @@ export function useCollabRoom({
       provider.awareness.off('change', refreshAwareness);
       roomMeta.unobserveDeep(refreshMeta);
       followMap.unobserve(refreshFollow);
+      provider.awareness.setLocalState(null);
       provider.destroy();
       bundle.doc.destroy();
     };
@@ -160,17 +176,12 @@ export function useCollabRoom({
     (name: string) => {
       if (!bundle || !hostGranted) return;
 
-      const current = bundle.roomMeta.get('adminName') as string | null | undefined;
-      const presenterOnline = awarenessUsers.some((user) => user.name === current);
-
-      if (current && current !== name && presenterOnline) return;
-
       bundle.doc.transact(() => {
         bundle.roomMeta.set('adminName', name);
         ensurePresenterViewport(bundle.roomMeta);
       });
     },
-    [awarenessUsers, bundle, hostGranted],
+    [bundle, hostGranted],
   );
 
   useEffect(() => {
@@ -237,7 +248,23 @@ export function useCollabRoom({
     (enabled: boolean) => {
       if (!bundle || !isPresenter) return;
       bundle.doc.transact(() => {
-        bundle.roomMeta.set('globalFollow', enabled);
+        writeSessionMode(bundle.roomMeta, enabled ? 'follow' : 'free');
+        if (!enabled) {
+          bundle.followMap.clear();
+        }
+      });
+    },
+    [bundle, isPresenter],
+  );
+
+  const setSessionMode = useCallback(
+    (mode: SessionMode) => {
+      if (!bundle || !isPresenter) return;
+      bundle.doc.transact(() => {
+        writeSessionMode(bundle.roomMeta, mode);
+        if (mode === 'free') {
+          bundle.followMap.clear();
+        }
       });
     },
     [bundle, isPresenter],
@@ -282,6 +309,7 @@ export function useCollabRoom({
     claimPresenter,
     claimAdmin: claimPresenter,
     setGlobalFollow,
+    setSessionMode,
     setUserFollow,
     clearUserFollow,
   };

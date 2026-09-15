@@ -5,11 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && cp -r ../courses dist/courses",
     "lint": "oxlint",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@browser-basics/embed-sdk": "*",
     "@browser-basics/yjs-room": "*",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",

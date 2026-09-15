@@ -4,3 +4,5 @@ dist
 *.local
 .env
 server/.env
+data/
+server/data/

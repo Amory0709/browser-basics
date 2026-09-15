@@ -1,5 +1,6 @@
 export type CollabRoomConfig = {
   getWsUrl?: () => string;
+  getHostVerifyUrl?: () => string;
   hostQueryParam?: string;
   hostSessionKey?: string;
   hostVerifyPath?: string;
@@ -38,9 +39,16 @@ export function resolveWsUrl(): string {
 }
 
 export function resolveHostVerifyUrl(): string {
-  const wsUrl = resolveWsUrl();
-  const httpUrl = wsUrl.replace(/^ws:\/\//, 'http://').replace(/^wss:\/\//, 'https://');
+  if (config.getHostVerifyUrl) {
+    return config.getHostVerifyUrl();
+  }
+
   const path = config.hostVerifyPath ?? defaults.hostVerifyPath!;
+  const wsUrl = resolveWsUrl();
+  const httpUrl = wsUrl
+    .replace(/^ws:\/\//, 'http://')
+    .replace(/^wss:\/\//, 'https://')
+    .replace(/\/yjs$/, '');
   return `${httpUrl}${path}`;
 }
 

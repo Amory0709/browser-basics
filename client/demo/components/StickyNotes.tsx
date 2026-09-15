@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import * as Y from 'yjs';
-import type { UserColor } from '../lib/types';
-import { USER_COLORS } from '../lib/types';
+import type { UserColor } from '../../src/lib/types';
+import { USER_COLORS } from '../../src/lib/types';
 import { observeYText, readYText, writeYText } from './LiveCursors';
 
 type StickyNoteProps = {

@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { CollabRoom, Viewport } from '@browser-basics/yjs-room';
 import { useBoardViewport } from '@browser-basics/yjs-room';
-import type { UserColor } from '../lib/types';
-import { AdminControls, FollowBanner } from './AdminControls';
-import { ChatPanel, PresenceBar } from './ChatPanel';
-import { DrawingCanvas } from './DrawingCanvas';
-import { LiveCursors } from './LiveCursors';
-import { createStickyNote, StickyNotesLayer } from './StickyNotes';
+import type { UserColor } from '../src/lib/types';
+import { AdminControls, FollowBanner } from '../src/components/AdminControls';
+import { ChatPanel, PresenceBar } from './components/ChatPanel';
+import { DrawingCanvas } from './components/DrawingCanvas';
+import { LiveCursors } from './components/LiveCursors';
+import { createStickyNote, StickyNotesLayer } from './components/StickyNotes';
 
 type PlaygroundProps = {
   room: CollabRoom;
@@ -142,7 +142,7 @@ export function Playground({ room, roomId, userName, userColor, onLeave }: Playg
               adminName={adminName}
               roomMeta={room.roomMetaState}
               followMap={room.followMap}
-              onGlobalFollowChange={room.setGlobalFollow}
+              onSessionModeChange={room.setSessionMode}
               onUserFollowChange={room.setUserFollow}
               onUserFollowReset={room.clearUserFollow}
             />

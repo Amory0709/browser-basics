@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import * as Y from 'yjs';
-import type { DrawStroke } from '../lib/types';
+import type { DrawStroke } from '../../src/lib/types';
 
 const COLORS = ['#111827', '#ef4444', '#3b82f6', '#22c55e', '#f59e0b', '#8b5cf6'];
 

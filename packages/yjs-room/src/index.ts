@@ -8,6 +8,7 @@ export {
   readViewport,
   shouldUserFollow,
   writePresenterViewport,
+  writeSessionMode,
 } from './room-meta.js';
 export { useBoardViewport } from './use-board-viewport.js';
 export type { UseBoardViewportOptions } from './use-board-viewport.js';
@@ -19,6 +20,7 @@ export type {
   CollabRoom,
   CollabRoomCollections,
   RoomMeta,
+  SessionMode,
   UserColor,
   Viewport,
   YjsRoom,

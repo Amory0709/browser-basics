@@ -8,8 +8,11 @@
   },
   "dependencies": {
     "@browser-basics/yjs-room": "*",
-    "@y/websocket-server": "^0.1.1",
+    "@y/websocket-server": "0.1.1",
     "dotenv": "^17.4.2",
-    "ws": "^8.18.3"
+    "level": "^10.0.0",
+    "ws": "^8.18.3",
+    "y-leveldb": "^0.2.0",
+    "yjs": "^13.6.32"
   }
 }
