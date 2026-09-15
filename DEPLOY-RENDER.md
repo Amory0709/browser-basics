@@ -16,7 +16,7 @@
 1. 登录 https://dashboard.render.com
 2. 右上角 **New +** → **Blueprint**
 3. **Connect GitHub**（首次需授权 Render 访问 GitHub）
-4. 选仓库 **`mhan8/browser-basics`**
+4. 选仓库 **`Amory0709/browser-basics`**
 5. Render 读取根目录 `render.yaml`，会创建两个服务：
 
 | 服务名 | 类型 | 地址 |

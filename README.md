@@ -2,7 +2,7 @@
 
 多人实时协作学习 playground — Yjs 便签、涂鸦、光标、聊天。同一房间链接，一起玩一起学。
 
-在线地址（部署后）：https://mhan8.github.io/browser-basics/
+在线地址（部署后）：https://browser-basics.onrender.com （Render）或 https://Amory0709.github.io/browser-basics/ （GitHub Pages）
 
 ## 技术栈
 
