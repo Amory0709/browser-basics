@@ -249,6 +249,9 @@ export function useCollabRoom({
       if (!bundle || !isPresenter) return;
       bundle.doc.transact(() => {
         writeSessionMode(bundle.roomMeta, enabled ? 'follow' : 'free');
+        if (!enabled) {
+          bundle.followMap.clear();
+        }
       });
     },
     [bundle, isPresenter],
@@ -259,6 +262,9 @@ export function useCollabRoom({
       if (!bundle || !isPresenter) return;
       bundle.doc.transact(() => {
         writeSessionMode(bundle.roomMeta, mode);
+        if (mode === 'free') {
+          bundle.followMap.clear();
+        }
       });
     },
     [bundle, isPresenter],

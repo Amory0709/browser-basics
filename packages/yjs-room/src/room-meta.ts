@@ -65,6 +65,7 @@ export function shouldUserFollow(
   followMap: Y.Map<boolean>,
 ): boolean {
   if (isPresenter) return false;
+  if (meta.sessionMode === 'free') return false;
 
   const override = followMap.get(String(clientId));
   if (override !== undefined) return override;

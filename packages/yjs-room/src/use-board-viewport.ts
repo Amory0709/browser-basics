@@ -29,7 +29,8 @@ export function useBoardViewport({
   remoteViewport,
   onViewportChange,
 }: UseBoardViewportOptions) {
-  const canControl = isPresenter || Boolean(isAdmin);
+  const canPan = isPresenter || Boolean(isAdmin) || !shouldFollow;
+  const canBroadcast = isPresenter || Boolean(isAdmin);
   const [viewport, setViewport] = useState<Viewport>(DEFAULT_VIEWPORT);
   const viewportRef = useRef(viewport);
   viewportRef.current = viewport;
@@ -38,11 +39,11 @@ export function useBoardViewport({
     (next: Viewport) => {
       viewportRef.current = next;
       setViewport(next);
-      if (canControl) {
+      if (canBroadcast) {
         onViewportChange(next);
       }
     },
-    [canControl, onViewportChange],
+    [canBroadcast, onViewportChange],
   );
 
   useEffect(() => {
@@ -54,7 +55,7 @@ export function useBoardViewport({
 
   const bindViewportControls = useCallback(
     (element: HTMLElement | null) => {
-      if (!element || !canControl) return () => undefined;
+      if (!element || !canPan) return () => undefined;
 
       let panning = false;
       let lastX = 0;
@@ -127,7 +128,7 @@ export function useBoardViewport({
         element.removeEventListener('contextmenu', onContextMenu);
       };
     },
-    [applyViewport, canControl],
+    [applyViewport, canPan],
   );
 
   const transformStyle = {
