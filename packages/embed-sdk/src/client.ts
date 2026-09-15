@@ -62,6 +62,7 @@ export function createEmbedClient(): EmbedClient {
     if (message.type === 'EMBED_ACK') {
       if (message.embedId !== embedId || resolved) return;
       resolved = true;
+      stopHandshakeRetry();
       role = message.role;
       sessionMode = message.sessionMode;
       for (const listener of sessionListeners) listener(sessionMode);
@@ -80,21 +81,23 @@ export function createEmbedClient(): EmbedClient {
 
   window.addEventListener('message', onParentMessage);
 
+  let handshakeTimer: ReturnType<typeof window.setInterval> | null = null;
+  const stopHandshakeRetry = () => {
+    if (handshakeTimer !== null) {
+      window.clearInterval(handshakeTimer);
+      handshakeTimer = null;
+    }
+  };
+
   const sendHandshake = () => post({ type: 'EMBED_HANDSHAKE', embedId });
   sendHandshake();
-  const handshakeTimer = window.setInterval(() => {
+  handshakeTimer = window.setInterval(() => {
     if (resolved) {
-      window.clearInterval(handshakeTimer);
+      stopHandshakeRetry();
       return;
     }
     sendHandshake();
   }, 400);
-  window.addEventListener('message', (event) => {
-    if (event.origin !== targetOrigin || !isParentMessage(event.data)) return;
-    if (event.data.type === 'EMBED_ACK' && event.data.embedId === embedId) {
-      window.clearInterval(handshakeTimer);
-    }
-  });
 
   const context: EmbedContext = {
     embedId,

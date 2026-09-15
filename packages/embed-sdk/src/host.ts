@@ -14,7 +14,6 @@ export type EmbedHostOptions = {
   role: EmbedRole;
   sessionMode: EmbedSessionMode;
   iframe: HTMLIFrameElement;
-  onSessionModeChange?: (mode: EmbedSessionMode) => void;
 };
 
 export type EmbedHost = {
@@ -34,7 +33,6 @@ export function createEmbedHost({
   role,
   sessionMode,
   iframe,
-  onSessionModeChange,
 }: EmbedHostOptions): EmbedHost {
   const targetOrigin = window.location.origin;
   const subscriptions = new Map<string, Subscription>();
@@ -124,7 +122,6 @@ export function createEmbedHost({
     setSessionMode: (mode) => {
       currentMode = mode;
       post({ type: 'SESSION_MODE', sessionMode: mode });
-      onSessionModeChange?.(mode);
     },
   };
 }

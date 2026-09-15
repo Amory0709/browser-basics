@@ -1,36 +1,30 @@
+import type { ChildMessage } from './protocol.js';
 import * as Y from 'yjs';
 
-function isYMap(value: unknown): value is Y.Map<unknown> {
-  return (
-    value !== null &&
-    typeof value === 'object' &&
-    typeof (value as Y.Map<unknown>).get === 'function' &&
-    typeof (value as Y.Map<unknown>).set === 'function'
-  );
+function readYMap(value: unknown): Y.Map<unknown> | null {
+  if (value === undefined || value === null) return null;
+  if (typeof value !== 'object' || typeof (value as Y.Map<unknown>).get !== 'function') {
+    return null;
+  }
+  return value as Y.Map<unknown>;
 }
 
-function isYText(value: unknown): value is Y.Text {
-  return (
-    value !== null &&
-    typeof value === 'object' &&
-    typeof (value as Y.Text).toString === 'function' &&
-    typeof (value as Y.Text).insert === 'function'
-  );
-}
-
-function isYArray(value: unknown): value is Y.Array<unknown> {
-  return (
-    value !== null &&
-    typeof value === 'object' &&
-    typeof (value as Y.Array<unknown>).toArray === 'function' &&
-    typeof (value as Y.Array<unknown>).push === 'function'
-  );
+function readYText(value: unknown): Y.Text | null {
+  if (value === undefined || value === null) return null;
+  if (
+    typeof value !== 'object' ||
+    typeof (value as Y.Text).toString !== 'function' ||
+    typeof (value as Y.Text).insert !== 'function'
+  ) {
+    return null;
+  }
+  return value as Y.Text;
 }
 
 export function getEmbedRoot(doc: Y.Doc, embedId: string): Y.Map<unknown> {
   const embeds = doc.getMap('embeds');
-  const existing = embeds.get(embedId);
-  if (isYMap(existing)) return existing;
+  const existing = readYMap(embeds.get(embedId));
+  if (existing) return existing;
   const created = new Y.Map();
   embeds.set(embedId, created);
   return created;
@@ -38,8 +32,8 @@ export function getEmbedRoot(doc: Y.Doc, embedId: string): Y.Map<unknown> {
 
 export function getSharedRoot(doc: Y.Doc, embedId: string): Y.Map<unknown> {
   const embed = getEmbedRoot(doc, embedId);
-  const existing = embed.get('shared');
-  if (isYMap(existing)) return existing;
+  const existing = readYMap(embed.get('shared'));
+  if (existing) return existing;
   const created = new Y.Map();
   embed.set('shared', created);
   return created;
@@ -47,8 +41,8 @@ export function getSharedRoot(doc: Y.Doc, embedId: string): Y.Map<unknown> {
 
 export function getSharedYMap(doc: Y.Doc, embedId: string, ns: string): Y.Map<unknown> {
   const shared = getSharedRoot(doc, embedId);
-  const existing = shared.get(ns);
-  if (isYMap(existing)) return existing;
+  const existing = readYMap(shared.get(ns));
+  if (existing) return existing;
   const created = new Y.Map();
   shared.set(ns, created);
   return created;
@@ -56,8 +50,8 @@ export function getSharedYMap(doc: Y.Doc, embedId: string, ns: string): Y.Map<un
 
 export function getSharedYText(doc: Y.Doc, embedId: string, ns: string): Y.Text {
   const shared = getSharedRoot(doc, embedId);
-  const existing = shared.get(ns);
-  if (isYText(existing)) return existing;
+  const existing = readYText(shared.get(ns));
+  if (existing) return existing;
   const created = new Y.Text();
   shared.set(ns, created);
   return created;
@@ -70,8 +64,6 @@ export function mapEntriesRecord(map: Y.Map<unknown>): Record<string, unknown> {
   });
   return entries;
 }
-
-import type { ChildMessage } from './protocol.js';
 
 export function applyChildMessage(
   doc: Y.Doc,
@@ -100,5 +92,3 @@ export function applyChildMessage(
   }
   return null;
 }
-
-export { isYArray, isYMap };

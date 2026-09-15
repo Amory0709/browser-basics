@@ -20,15 +20,6 @@ function isYMap(value: unknown): value is Y.Map<unknown> {
   );
 }
 
-function isYArray(value: unknown): value is Y.Array<unknown> {
-  return (
-    value !== null &&
-    typeof value === 'object' &&
-    typeof (value as Y.Array<unknown>).toArray === 'function' &&
-    typeof (value as Y.Array<unknown>).push === 'function'
-  );
-}
-
 export function getBoardEmbeds(doc: Y.Doc): Y.Array<unknown> {
   const board = doc.getMap('board');
   const existing = board.get('embeds');
