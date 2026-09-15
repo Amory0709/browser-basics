@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { createServer } from 'http';
 import { timingSafeEqual } from 'crypto';
 import { WebSocketServer } from 'ws';
