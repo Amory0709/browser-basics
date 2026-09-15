@@ -7,3 +7,16 @@ services:
     buildCommand: npm install
     startCommand: node server.js
     healthCheckPath: /health
+
+  - type: web
+    name: browser-basics
+    runtime: static
+    buildCommand: npm install && npm run build:render
+    staticPublishPath: client/dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_WS_URL
+        value: wss://browser-basics-ws.onrender.com
