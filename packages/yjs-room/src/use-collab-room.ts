@@ -84,7 +84,9 @@ export function useCollabRoom({
   }, [collections, enabled, roomId, wsUrl]);
 
   const isPresenter = Boolean(
-    bundle && hostGranted && roomMetaState.adminName && roomMetaState.adminName === userName,
+    bundle &&
+      hostGranted &&
+      (!roomMetaState.adminName || roomMetaState.adminName === userName),
   );
 
   const shouldFollow = bundle
@@ -165,17 +167,12 @@ export function useCollabRoom({
     (name: string) => {
       if (!bundle || !hostGranted) return;
 
-      const current = bundle.roomMeta.get('adminName') as string | null | undefined;
-      const presenterOnline = awarenessUsers.some((user) => user.name === current);
-
-      if (current && current !== name && presenterOnline) return;
-
       bundle.doc.transact(() => {
         bundle.roomMeta.set('adminName', name);
         ensurePresenterViewport(bundle.roomMeta);
       });
     },
-    [awarenessUsers, bundle, hostGranted],
+    [bundle, hostGranted],
   );
 
   useEffect(() => {
