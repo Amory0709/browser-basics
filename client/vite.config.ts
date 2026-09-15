@@ -51,5 +51,31 @@ export default defineConfig({
   server: {
     port: 5173,
     host: true,
+    proxy: {
+      '/api/host-verify': {
+        target: 'http://localhost:1234',
+        changeOrigin: true,
+      },
+      '/yjs': {
+        target: 'ws://localhost:1234',
+        ws: true,
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/yjs/, ''),
+      },
+    },
+  },
+  preview: {
+    proxy: {
+      '/api/host-verify': {
+        target: 'http://localhost:1234',
+        changeOrigin: true,
+      },
+      '/yjs': {
+        target: 'ws://localhost:1234',
+        ws: true,
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/yjs/, ''),
+      },
+    },
   },
 });
