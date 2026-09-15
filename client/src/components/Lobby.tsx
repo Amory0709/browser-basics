@@ -1,21 +1,29 @@
 import { useState, type FormEvent } from 'react';
-import { getShareUrl, pickColor, randomName } from '../lib/types';
+import { getShareUrl, isValidAdminKey, pickColor, randomName } from '../lib/types';
 
 type LobbyProps = {
-  onJoin: (room: string, name: string) => void;
+  onJoin: (room: string, name: string, adminKey: string | null) => void;
   initialRoom?: string;
+  initialAdminKey?: string | null;
 };
 
-export function Lobby({ onJoin, initialRoom = 'learn-together' }: LobbyProps) {
+export function Lobby({ onJoin, initialRoom = 'learn-together', initialAdminKey = null }: LobbyProps) {
   const [room, setRoom] = useState(initialRoom);
   const [name, setName] = useState(() => randomName());
+  const [adminKey, setAdminKey] = useState(initialAdminKey ?? '');
+  const [joinAsAdmin, setJoinAsAdmin] = useState(Boolean(initialAdminKey));
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
     const trimmedRoom = room.trim();
     const trimmedName = name.trim();
     if (!trimmedRoom || !trimmedName) return;
-    onJoin(trimmedRoom, trimmedName);
+    const key = joinAsAdmin ? adminKey.trim() : '';
+    if (joinAsAdmin && !isValidAdminKey(key)) {
+      window.alert('管理员密钥不正确');
+      return;
+    }
+    onJoin(trimmedRoom, trimmedName, joinAsAdmin ? key : null);
   };
 
   return (
@@ -50,6 +58,28 @@ export function Lobby({ onJoin, initialRoom = 'learn-together' }: LobbyProps) {
               placeholder="例如 math-study"
             />
           </label>
+
+          <label className="admin-join-toggle">
+            <input
+              type="checkbox"
+              checked={joinAsAdmin}
+              onChange={(e) => setJoinAsAdmin(e.target.checked)}
+            />
+            <span>以管理员身份进入</span>
+          </label>
+
+          {joinAsAdmin && (
+            <label>
+              管理员密钥
+              <input
+                type="password"
+                value={adminKey}
+                onChange={(e) => setAdminKey(e.target.value)}
+                placeholder="输入管理员密钥"
+                autoComplete="off"
+              />
+            </label>
+          )}
 
           <button type="submit" className="btn-primary">
             进入房间

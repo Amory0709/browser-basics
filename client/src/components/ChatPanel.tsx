@@ -90,14 +90,15 @@ export function ChatPanel({ messages, doc, author, userColor }: ChatPanelProps) 
 }
 
 type PresenceBarProps = {
-  users: { name: string; color: UserColor }[];
+  users: { name: string; color: UserColor; isAdmin?: boolean }[];
   connected: boolean;
   synced: boolean;
   room: string;
+  isAdmin?: boolean;
   onLeave: () => void;
 };
 
-export function PresenceBar({ users, connected, synced, room, onLeave }: PresenceBarProps) {
+export function PresenceBar({ users, connected, synced, room, isAdmin = false, onLeave }: PresenceBarProps) {
   const copyLink = async () => {
     const url = new URL(window.location.href);
     url.searchParams.set('room', room);
@@ -108,6 +109,7 @@ export function PresenceBar({ users, connected, synced, room, onLeave }: Presenc
     <header className="presence-bar">
       <div className="presence-left">
         <strong>房间 · {room}</strong>
+        {isAdmin && <span className="admin-badge">管理员</span>}
         <span className={`status-dot${connected ? ' online' : ''}`} aria-hidden="true" />
         <span className="status-text">
           {connected ? (synced ? '已同步' : '同步中…') : '连接中…'}
@@ -118,10 +120,11 @@ export function PresenceBar({ users, connected, synced, room, onLeave }: Presenc
         {users.map((user) => (
           <span
             key={user.name + user.color.cursor}
-            className="presence-chip"
+            className={`presence-chip${user.isAdmin ? ' presence-chip-admin' : ''}`}
             style={{ background: user.color.bg, color: user.color.text, borderColor: user.color.cursor }}
           >
             {user.name}
+            {user.isAdmin ? ' · 管理员' : ''}
           </span>
         ))}
       </div>

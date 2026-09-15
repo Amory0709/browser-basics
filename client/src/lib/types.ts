@@ -15,11 +15,26 @@ export const USER_COLORS: UserColor[] = [
   { bg: '#fee2e2', text: '#991b1b', cursor: '#ef4444' },
 ];
 
+export type Viewport = {
+  x: number;
+  y: number;
+  scale: number;
+};
+
+export const DEFAULT_VIEWPORT: Viewport = { x: 0, y: 0, scale: 1 };
+
 export type AwarenessUser = {
   clientId: number;
   name: string;
   color: UserColor;
   cursor?: { x: number; y: number };
+  viewport?: Viewport;
+  isAdmin?: boolean;
+};
+
+export type RoomMeta = {
+  adminName: string | null;
+  globalFollow: boolean;
 };
 
 export type StickyNoteData = {
@@ -74,4 +89,20 @@ export function getShareUrl(room: string): string {
   const url = new URL(window.location.href);
   url.searchParams.set('room', room);
   return url.toString();
+}
+
+export function getAdminKeyFromUrl(): string | null {
+  const params = new URLSearchParams(window.location.search);
+  const key = params.get('admin')?.trim();
+  return key || null;
+}
+
+export function resolveAdminSecret(): string {
+  const fromEnv = import.meta.env.VITE_ADMIN_KEY as string | undefined;
+  return fromEnv?.trim() || 'teach-admin';
+}
+
+export function isValidAdminKey(key: string | null | undefined): boolean {
+  if (!key?.trim()) return false;
+  return key.trim() === resolveAdminSecret();
 }

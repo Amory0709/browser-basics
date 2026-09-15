@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Lobby } from './components/Lobby';
 import { Playground } from './components/Playground';
-import { pickColor } from './lib/types';
+import { getAdminKeyFromUrl, isValidAdminKey, pickColor } from './lib/types';
 import { useYjsRoom } from './lib/useYjsRoom';
 
 function getInitialRoom(): string {
@@ -10,10 +10,18 @@ function getInitialRoom(): string {
 }
 
 export default function App() {
-  const [session, setSession] = useState<{ room: string; name: string } | null>(null);
+  const [session, setSession] = useState<{ room: string; name: string; adminKey: string | null } | null>(
+    null,
+  );
   const initialRoom = useMemo(() => getInitialRoom(), []);
+  const initialAdminKey = useMemo(() => getAdminKeyFromUrl(), []);
 
-  const room = useYjsRoom(session?.room ?? '', Boolean(session));
+  const room = useYjsRoom(
+    session?.room ?? '',
+    Boolean(session),
+    session?.name ?? '',
+    isValidAdminKey(session?.adminKey),
+  );
 
   const userColor = useMemo(() => {
     if (!session) return pickColor(0);
@@ -22,11 +30,16 @@ export default function App() {
     return pickColor(hash);
   }, [session]);
 
-  const join = (roomId: string, name: string) => {
+  const join = (roomId: string, name: string, adminKey: string | null) => {
     const url = new URL(window.location.href);
     url.searchParams.set('room', roomId);
+    if (adminKey) {
+      url.searchParams.set('admin', adminKey);
+    } else {
+      url.searchParams.delete('admin');
+    }
     window.history.replaceState({}, '', url.toString());
-    setSession({ room: roomId, name });
+    setSession({ room: roomId, name, adminKey });
   };
 
   const leave = () => {
@@ -34,7 +47,7 @@ export default function App() {
   };
 
   if (!session || !room) {
-    return <Lobby onJoin={join} initialRoom={initialRoom} />;
+    return <Lobby onJoin={join} initialRoom={initialRoom} initialAdminKey={initialAdminKey} />;
   }
 
   return (
