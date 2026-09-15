@@ -48,12 +48,24 @@
 
     #map { width: 100%; height: auto; display: block; }
 
-    .region-label { font-size: 11px; fill: var(--slb-navy); font-weight: 600; }
-    .region-sub { font-size: 9px; fill: var(--muted); }
+    .region-label { font-size: 11px; fill: var(--slb-navy); font-weight: 600; pointer-events: none; }
+    .region-sub { font-size: 9px; fill: var(--muted); pointer-events: none; }
+
+    .commune { stroke: #cbd5e1; stroke-width: 0.6; }
+    .commune.ch { fill: #f1f5f9; }
+    .commune.fr { fill: #eef4ff; }
+    .lake { fill: #93c5fd; fill-opacity: 0.55; stroke: #60a5fa; stroke-width: 0.8; pointer-events: none; }
 
     .marker { cursor: pointer; }
     .marker:hover { opacity: 0.85; }
     .marker.active { filter: drop-shadow(0 0 4px rgba(0, 20, 220, 0.5)); }
+
+    .map-status {
+      font-size: 0.82rem;
+      color: var(--muted);
+      text-align: center;
+      padding: 2rem 1rem;
+    }
 
     aside {
       border: 1px solid var(--line);
@@ -100,12 +112,14 @@
   <main>
     <h1>1989 CERN 计算设施 · 地区分布</h1>
     <p class="lede">
-      D3 极简地图：法瑞轮廓 + 日内瓦湖。每个地点按<strong>实际数量</strong>摆放对应机型小图标；悬停查看详情。
+      D3 地图：SITG 官方 GeoJSON 市镇边界 + 日内瓦湖。每个地点按<strong>实际经纬度</strong>定位，按<strong>实际数量</strong>摆放机型小图标。
     </p>
 
     <div class="layout">
       <div class="viz-card">
-        <svg id="map" viewBox="0 0 720 480" role="img" aria-label="CERN 1989 计算设施分布图"></svg>
+        <svg id="map" viewBox="0 0 720 480" role="img" aria-label="CERN 1989 计算设施分布图">
+          <text x="360" y="240" text-anchor="middle" class="map-status">加载 GeoJSON…</text>
+        </svg>
       </div>
 
       <aside>
@@ -135,6 +149,7 @@
           <li>CERN Courier, LEP 首束流 — <a href="https://cerncourier.com/a/when-lep-cerns-first-big-collider-saw-beam/">cerncourier.com</a></li>
           <li>P. Dimou, network names at CERN (1988) — <a href="https://sandbox-cds-rdm.web.cern.ch/records/hzb1n-15x80">Dimou report</a></li>
           <li>CERN Meyrin site — <a href="https://voisins.cern/en/meyrin-site-point-1/">voisins.cern</a></li>
+          <li>地理边界 GeoJSON — SITG <a href="https://sitg.ge.ch/donnees/cad-commune">CAD_COMMUNE</a> / GEO_COMMUNES_CH_FR / GEO_LAC_LEMAN（见 <a href="geo/SOURCES.md">geo/SOURCES.md</a>）</li>
         </ol>
       </div>
     </section>
@@ -147,20 +162,17 @@
 
   <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
   <script>
-    const SLB = { blue: '#0014dc', navy: '#003366', lake: '#93c5fd', ch: '#f1f5f9', fr: '#eef4ff' };
-
-    // 简化轮廓（示意，非精确 GIS）
-    const lake = 'M 80,340 Q 120,300 200,310 T 380,320 Q 460,330 520,360 L 540,400 L 60,400 Z';
-    const switzerland = 'M 60,80 L 340,60 L 380,120 L 360,200 L 320,260 L 240,280 L 120,260 L 60,180 Z';
-    const france = 'M 380,60 L 660,90 L 680,200 L 640,320 L 520,360 L 380,280 L 360,200 L 380,120 Z';
-    const border = 'M 120,260 L 240,280 L 320,260 L 360,200 L 380,120';
+    const SLB = { blue: '#0014dc', navy: '#003366' };
+    const MAP = { w: 720, h: 480, pad: 28 };
 
     const MAX_ICONS = 24;
     const CELL = 13;
 
+    // 经纬度来自 OpenStreetMap / CERN 公开站点
     const sites = [
       {
-        name: 'Building 513 · Computer Centre', region: 'Meyrin · 瑞士侧', x: 195, y: 165,
+        name: 'Building 513 · Computer Centre', region: 'Meyrin · 瑞士侧',
+        lon: 6.05351, lat: 46.23377,
         groups: [
           { type: 'mainframe', count: 20, label: 'IBM VM/CMS', detail: '~20 CU；~60 GB 用户盘 [1]' },
           { type: 'vax', count: 2, label: 'VXCRNA + VXCRNB', detail: '8650 + 8800；~4.5 CU [1]' },
@@ -168,30 +180,36 @@
         ],
       },
       {
-        name: 'Building 31', region: 'Meyrin · Tim BL', x: 255, y: 205,
+        name: 'Building 31', region: 'Meyrin · Tim BL',
+        lon: 6.0568, lat: 46.2317,
         groups: [{ type: 'next', count: 1, label: 'NeXT', detail: '1989 提案；1990 WWW [2]' }],
       },
       {
-        name: 'Meyrin SCR', region: '技术/安全控制', x: 165, y: 225,
+        name: 'Meyrin SCR', region: '技术/安全控制',
+        lon: 6.0518, lat: 46.2352,
         groups: [{ type: 'pc', count: 50, label: 'LEP 报警系统', detail: '50+ 计算机 [5]' }],
       },
       {
-        name: 'Prévessin PCR', region: '法国侧 · 控制室', x: 515, y: 145,
+        name: 'Prévessin PCR', region: '法国侧 · 控制室',
+        lon: 6.0120, lat: 46.2720,
         groups: [
           { type: 'workstation', count: 12, label: 'Apollo 工作站', detail: 'LEP/SPS 控制台 [4]' },
           { type: 'pc', count: 56, label: '386 前端 PC', detail: '1989.7 首束流 [4][6]' },
         ],
       },
       {
-        name: 'LEP Point 1', region: '环上 · Meyrin', x: 285, y: 135,
+        name: 'LEP Point 1', region: '环上 · Meyrin',
+        lon: 6.0582, lat: 46.2361,
         groups: [{ type: 'workstation', count: 30, label: 'ALEPH 等实验集群', detail: '数据重建 [3]' }],
       },
       {
-        name: 'LEP Point 2 · Sergy', region: '环上 · 法国', x: 575, y: 235,
+        name: 'LEP Point 2 · Sergy', region: '环上 · 法国',
+        lon: 6.0407, lat: 46.2503,
         groups: [{ type: 'pc', count: 25, label: 'DELPHI / L3 区域', detail: 'Token Ring [4]' }],
       },
       {
-        name: '欧洲 institute', region: 'FATMEN 分布式', x: 425, y: 295,
+        name: '欧洲 institute', region: 'FATMEN 分布式',
+        lon: 6.1437, lat: 46.2044,
         groups: [{ type: 'vax', count: 80, label: '跨所协作节点', detail: '10+ OS 变种 [3]' }],
       },
     ];
@@ -228,18 +246,6 @@
       (icons[type] || icons.pc)();
     }
 
-    const svg = d3.select('#map');
-    const gMap = svg.append('g');
-
-    gMap.append('path').attr('d', france).attr('fill', SLB.fr).attr('stroke', '#cbd5e1').attr('stroke-width', 1);
-    gMap.append('path').attr('d', switzerland).attr('fill', SLB.ch).attr('stroke', '#cbd5e1').attr('stroke-width', 1);
-    gMap.append('path').attr('d', lake).attr('fill', SLB.lake).attr('opacity', 0.55).attr('stroke', '#60a5fa').attr('stroke-width', 1);
-    gMap.append('path').attr('d', border).attr('fill', 'none').attr('stroke', '#94a3b8').attr('stroke-width', 1.5).attr('stroke-dasharray', '6 4');
-
-    gMap.append('text').attr('x', 160).attr('y', 110).attr('class', 'region-label').text('瑞士 · Meyrin');
-    gMap.append('text').attr('x', 500).attr('y', 110).attr('class', 'region-label').text('法国 · Prévessin');
-    gMap.append('text').attr('x', 280).attr('y', 370).attr('class', 'region-sub').text('日内瓦湖（示意）');
-
     const detail = d3.select('#detail');
 
     function showDetail(d) {
@@ -250,55 +256,124 @@
       );
     }
 
-    sites.forEach((site) => {
-      const siteG = gMap.append('g').attr('transform', `translate(${site.x},${site.y})`);
+    async function loadGeo(name) {
+      const res = await fetch(`geo/${name}`);
+      if (!res.ok) throw new Error(`${name}: ${res.status}`);
+      return res.json();
+    }
 
-      siteG.append('text')
-        .attr('x', 0).attr('y', -8)
-        .attr('class', 'region-sub')
+    async function initMap() {
+      const svg = d3.select('#map');
+      svg.selectAll('*').remove();
+
+      const [ch, fr, lake] = await Promise.all([
+        loadGeo('communes-ch.geojson'),
+        loadGeo('communes-fr.geojson'),
+        loadGeo('lac-leman.geojson'),
+      ]);
+
+      const allFeatures = [
+        ...ch.features.map((f) => ({ ...f, country: 'ch' })),
+        ...fr.features.map((f) => ({ ...f, country: 'fr' })),
+      ];
+
+      const geo = {
+        type: 'FeatureCollection',
+        features: allFeatures,
+      };
+
+      const projection = d3.geoMercator().fitExtent(
+        [[MAP.pad, MAP.pad], [MAP.w - MAP.pad, MAP.h - MAP.pad]],
+        geo
+      );
+      const path = d3.geoPath(projection);
+      const gMap = svg.append('g');
+
+      gMap.selectAll('path.commune')
+        .data(allFeatures)
+        .join('path')
+        .attr('class', (d) => `commune ${d.country}`)
+        .attr('d', path);
+
+      gMap.selectAll('path.lake')
+        .data(lake.features)
+        .join('path')
+        .attr('class', 'lake')
+        .attr('d', path);
+
+      gMap.append('text').attr('class', 'region-label')
+        .attr('transform', `translate(${projection([6.05, 46.245])})`)
+        .attr('text-anchor', 'middle').attr('dy', -6)
+        .text('瑞士 · Meyrin');
+
+      gMap.append('text').attr('class', 'region-label')
+        .attr('transform', `translate(${projection([6.03, 46.275])})`)
+        .attr('text-anchor', 'middle').attr('dy', -6)
+        .text('法国 · Prévessin');
+
+      gMap.append('text').attr('class', 'region-sub')
+        .attr('transform', `translate(${projection([6.15, 46.22])})`)
         .attr('text-anchor', 'middle')
-        .text(site.name.split(' · ')[0]);
+        .text('日内瓦湖 · SITG');
 
-      let offsetY = 0;
+      sites.forEach((site) => {
+        const [x, y] = projection([site.lon, site.lat]);
+        const siteG = gMap.append('g').attr('transform', `translate(${x},${y})`);
 
-      site.groups.forEach((group, gi) => {
-        const shown = Math.min(group.count, MAX_ICONS);
-        const positions = gridPositions(shown);
-        const cols = Math.min(shown, Math.ceil(Math.sqrt(shown)));
-        const rows = Math.ceil(shown / cols);
-        const groupW = cols * CELL;
-        const groupH = rows * CELL;
+        siteG.append('text')
+          .attr('x', 0).attr('y', -8)
+          .attr('class', 'region-sub')
+          .attr('text-anchor', 'middle')
+          .text(site.name.split(' · ')[0]);
 
-        const groupG = siteG.append('g').attr('transform', `translate(${gi * (groupW + 8)}, ${offsetY})`);
+        let offsetY = 0;
 
-        positions.forEach((pos) => {
-          const icon = groupG.append('g')
-            .attr('class', 'marker')
-            .attr('transform', `translate(${pos.x + 6}, ${pos.y + 6})`)
-            .datum({ ...group, site: site.name, region: site.region });
+        site.groups.forEach((group) => {
+          const shown = Math.min(group.count, MAX_ICONS);
+          const positions = gridPositions(shown);
+          const cols = Math.min(shown, Math.ceil(Math.sqrt(shown)));
+          const rows = Math.ceil(shown / cols);
+          const groupW = cols * CELL;
+          const groupH = rows * CELL;
 
-          drawIcon(icon, group.type);
+          const groupG = siteG.append('g').attr('transform', `translate(${-groupW / 2}, ${offsetY})`);
 
-          icon.on('mouseenter', function (_, d) {
-            d3.selectAll('.marker').classed('active', false);
-            d3.select(this).classed('active', true);
-            showDetail(d);
+          positions.forEach((pos) => {
+            const icon = groupG.append('g')
+              .attr('class', 'marker')
+              .attr('transform', `translate(${pos.x + 6}, ${pos.y + 6})`)
+              .datum({ ...group, site: site.name, region: site.region });
+
+            drawIcon(icon, group.type);
+
+            icon.on('mouseenter', function (_, d) {
+              d3.selectAll('.marker').classed('active', false);
+              d3.select(this).classed('active', true);
+              showDetail(d);
+            });
           });
+
+          if (group.count > MAX_ICONS) {
+            groupG.append('text')
+              .attr('x', groupW / 2)
+              .attr('y', groupH + 12)
+              .attr('text-anchor', 'middle')
+              .attr('fill', SLB.blue)
+              .attr('font-size', 10)
+              .attr('font-weight', 600)
+              .text(`×${group.count}`);
+          }
+
+          offsetY += groupH + (group.count > MAX_ICONS ? 18 : 10);
         });
-
-        if (group.count > MAX_ICONS) {
-          groupG.append('text')
-            .attr('x', groupW / 2)
-            .attr('y', groupH + 12)
-            .attr('text-anchor', 'middle')
-            .attr('fill', SLB.blue)
-            .attr('font-size', 10)
-            .attr('font-weight', 600)
-            .text(`×${group.count}`);
-        }
-
-        offsetY = Math.max(offsetY, groupH + (group.count > MAX_ICONS ? 16 : 4));
       });
+    }
+
+    initMap().catch((err) => {
+      d3.select('#map').html(
+        `<text x="360" y="240" text-anchor="middle" class="map-status">` +
+        `GeoJSON 加载失败（需 HTTP 服务预览）：${err.message}</text>`
+      );
     });
   </script>
 </body>
