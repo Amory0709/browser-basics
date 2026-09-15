@@ -3,21 +3,22 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>1989 日内瓦 CERN：计算机系统复杂度</title>
+  <title>1989 CERN 计算设施 · 地区分布与容量</title>
   <style>
     :root {
-      --bg: #0b1220;
-      --panel: #141e33;
+      --bg: #0a1020;
+      --panel: #121c30;
+      --panel2: #18243c;
       --text: #e8edf7;
-      --muted: #9aa8c2;
+      --muted: #93a4c3;
       --accent: #5eead4;
-      --ibm: #3b82f6;
-      --vms: #f59e0b;
-      --unix: #22c55e;
-      --mac: #a78bfa;
-      --pc: #94a3b8;
-      --warn: #fb7185;
-      --line: #243049;
+      --ch: #ef4444;
+      --fr: #3b82f6;
+      --line: #2a3858;
+      --ibm: #60a5fa;
+      --vax: #fbbf24;
+      --ws: #a78bfa;
+      --ctrl: #f472b6;
     }
 
     * { box-sizing: border-box; }
@@ -25,403 +26,551 @@
     body {
       margin: 0;
       font-family: "Segoe UI", system-ui, sans-serif;
-      background: radial-gradient(circle at top, #15213a 0%, var(--bg) 55%);
+      background: radial-gradient(circle at 20% 0%, #172554 0%, var(--bg) 50%);
       color: var(--text);
-      line-height: 1.6;
+      line-height: 1.55;
     }
 
     main {
-      max-width: 1100px;
+      max-width: 1180px;
       margin: 0 auto;
-      padding: 2rem 1.25rem 3rem;
-    }
-
-    header {
-      margin-bottom: 2rem;
+      padding: 1.5rem 1rem 3rem;
     }
 
     h1 {
-      font-size: clamp(1.6rem, 4vw, 2.4rem);
+      font-size: clamp(1.5rem, 4vw, 2.2rem);
+      margin: 0 0 0.5rem;
       line-height: 1.2;
-      margin: 0 0 0.75rem;
     }
 
     .lede {
       color: var(--muted);
-      max-width: 70ch;
-      margin: 0;
+      max-width: 72ch;
+      margin: 0 0 1.25rem;
     }
 
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 1rem;
-      margin: 1.5rem 0 2rem;
-    }
-
-    .stat {
-      background: var(--panel);
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      padding: 1rem;
-    }
-
-    .stat strong {
-      display: block;
-      font-size: 1.6rem;
-      color: var(--accent);
-      margin-bottom: 0.25rem;
-    }
-
-    .stat span {
+    .note-box {
+      border-left: 3px solid var(--accent);
+      padding: 0.6rem 0.9rem;
+      background: rgba(94, 234, 212, 0.06);
       color: var(--muted);
       font-size: 0.92rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 1rem;
+    }
+
+    @media (max-width: 900px) {
+      .grid-2 { grid-template-columns: 1fr; }
     }
 
     section {
       background: var(--panel);
       border: 1px solid var(--line);
-      border-radius: 16px;
-      padding: 1.25rem;
-      margin-bottom: 1.25rem;
+      border-radius: 14px;
+      padding: 1rem 1.1rem;
+      margin-bottom: 1rem;
     }
 
     h2 {
-      margin: 0 0 1rem;
-      font-size: 1.15rem;
+      font-size: 1.05rem;
+      margin: 0 0 0.85rem;
     }
 
-    .viz-wrap {
+    .map-wrap {
       overflow-x: auto;
+      background: var(--panel2);
+      border-radius: 10px;
+      padding: 0.5rem;
     }
 
-    svg {
-      display: block;
-      width: 100%;
-      min-width: 720px;
-      height: auto;
+    svg.map { width: 100%; min-width: 680px; height: auto; display: block; }
+
+    .pin { cursor: pointer; transition: transform 0.15s ease; }
+    .pin:hover { transform: scale(1.08); }
+    .pin.active circle { stroke: #fff; stroke-width: 2.5; }
+
+    .detail-panel {
+      min-height: 280px;
+      background: var(--panel2);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 0.9rem;
     }
 
-    .legend {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.75rem 1.25rem;
-      margin-top: 1rem;
+    .detail-panel h3 {
+      margin: 0 0 0.35rem;
+      font-size: 1rem;
+      color: var(--accent);
+    }
+
+    .detail-panel .meta {
       color: var(--muted);
-      font-size: 0.9rem;
+      font-size: 0.85rem;
+      margin-bottom: 0.75rem;
     }
 
-    .legend span::before {
-      content: "";
-      display: inline-block;
-      width: 0.75rem;
-      height: 0.75rem;
-      border-radius: 999px;
-      margin-right: 0.4rem;
-      vertical-align: middle;
+    .detail-panel ul {
+      margin: 0;
+      padding-left: 1.1rem;
+      font-size: 0.92rem;
     }
 
-    .legend .ibm::before { background: var(--ibm); }
-    .legend .vms::before { background: var(--vms); }
-    .legend .unix::before { background: var(--unix); }
-    .legend .mac::before { background: var(--mac); }
-    .legend .pc::before { background: var(--pc); }
-    .legend .info::before { background: var(--warn); }
+    .detail-panel li { margin-bottom: 0.35rem; }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.95rem;
-    }
-
-    th, td {
-      text-align: left;
-      padding: 0.65rem 0.5rem;
-      border-bottom: 1px solid var(--line);
-      vertical-align: top;
-    }
-
-    th { color: var(--muted); font-weight: 600; }
-
-    .bar-chart {
+    .stats {
       display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
       gap: 0.75rem;
+      margin-bottom: 1rem;
     }
+
+    .stat {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 0.85rem;
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 1.35rem;
+      color: var(--accent);
+    }
+
+    .stat span { color: var(--muted); font-size: 0.85rem; }
+
+    .bars { display: grid; gap: 0.65rem; }
 
     .bar-row {
       display: grid;
-      grid-template-columns: 120px 1fr 72px;
-      gap: 0.75rem;
+      grid-template-columns: 110px 1fr 64px;
+      gap: 0.6rem;
       align-items: center;
+      font-size: 0.9rem;
     }
 
-    .bar-label { font-size: 0.92rem; }
-
-    .bar-track {
-      height: 14px;
+    .track {
+      height: 12px;
       background: #0f172a;
       border-radius: 999px;
       overflow: hidden;
     }
 
-    .bar-fill {
-      height: 100%;
+    .fill { height: 100%; border-radius: 999px; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 0.55rem 0.45rem;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+    }
+
+    th { color: var(--muted); }
+
+    .tag {
+      display: inline-block;
+      padding: 0.1rem 0.45rem;
       border-radius: 999px;
+      font-size: 0.75rem;
+      margin-right: 0.25rem;
     }
 
-    .bar-value {
-      text-align: right;
+    .tag.ch { background: rgba(239,68,68,.15); color: #fca5a5; }
+    .tag.fr { background: rgba(59,130,246,.15); color: #93c5fd; }
+    .tag.ring { background: rgba(167,139,250,.15); color: #c4b5fd; }
+
+    .refs {
+      font-size: 0.86rem;
       color: var(--muted);
-      font-size: 0.88rem;
     }
 
-    .sources {
-      color: var(--muted);
-      font-size: 0.88rem;
+    .refs ol {
+      padding-left: 1.2rem;
     }
 
-    .sources a {
-      color: #93c5fd;
-    }
-
-    .note {
-      border-left: 3px solid var(--accent);
-      padding-left: 0.85rem;
-      color: var(--muted);
-      margin: 0;
-    }
+    .refs li { margin-bottom: 0.55rem; }
+    .refs a { color: #93c5fd; word-break: break-word; }
 
     footer {
-      margin-top: 1.5rem;
+      margin-top: 1rem;
       color: var(--muted);
-      font-size: 0.88rem;
+      font-size: 0.84rem;
     }
   </style>
 </head>
 <body>
   <main>
     <header>
-      <h1>1989 日内瓦 CERN：计算机系统有多复杂？</h1>
+      <h1>1989 前后 CERN 计算设施：地区 · 数量 · 容量</h1>
       <p class="lede">
-        Web 诞生前，CERN 不是「一台大电脑」，而是<strong>多套互不兼容的操作系统</strong>、
-        <strong>多套信息孤岛</strong>、以及<strong>快速增长的网络</strong>叠在一起。
-        下图数据来自 CERN 官方计算机通讯与 1989 年 FATMEN 报告等一手资料。
+        极简地图展示 Meyrin（瑞士侧）与 Prévessin（法国侧）的关键节点。
+        数据来自 CERN Computer Newsletter、FATMEN 报告、LEP 控制/报警系统论文及 Tim Berners-Lee 一手叙述。
+        <strong>示意图，非精确 GIS。</strong>
+      </p>
+      <p class="note-box">
+        1 CU（CERN Unit）≈ 1 台 IBM 370/168 算力。地图比例与建筑位置为教学示意；精确「网络名 → 物理地址」见 Dimou 1988 报告 [7]。
       </p>
     </header>
 
-    <div class="stats-grid" aria-label="关键统计">
-      <div class="stat">
-        <strong>~20 CU</strong>
-        <span>IBM 主机总容量（1 CU ≈ 1 台 IBM 370/168）</span>
-      </div>
-      <div class="stat">
-        <strong>60 GB</strong>
-        <span>IBM VM/CMS 用户磁盘（1987）</span>
-      </div>
-      <div class="stat">
-        <strong>~5 GB</strong>
-        <span>VAX/VMS 用户磁盘（1987）</span>
-      </div>
-      <div class="stat">
-        <strong>4 种 OS</strong>
-        <span>Tim 1989 提案点名：VM/CMS、VMS、Unix、Mac</span>
-      </div>
+    <div class="stats" aria-label="汇总统计">
+      <div class="stat"><strong>~20 CU</strong><span>IBM 主机总容量 [1]</span></div>
+      <div class="stat"><strong>60 GB</strong><span>VM/CMS 用户磁盘 [1]</span></div>
+      <div class="stat"><strong>~5 GB</strong><span>中央 VAX 用户磁盘 [1]</span></div>
+      <div class="stat"><strong>2 + 集群</strong><span>VXCRNA + VXCRNB [1]</span></div>
+      <div class="stat"><strong>136</strong><span>VAX Index 终端线 [1]</span></div>
+      <div class="stat"><strong>27 km</strong><span>LEP 环 + 8 个 access point [4][5]</span></div>
     </div>
 
-    <section aria-labelledby="map-title">
-      <h2 id="map-title">系统孤岛示意（非真实网络拓扑，表达「各自为政」）</h2>
-      <div class="viz-wrap">
-        <svg viewBox="0 0 960 520" role="img" aria-labelledby="map-title map-desc">
-          <title id="map-desc">CERN 1989 前后多套计算机与信息系统并存示意图</title>
-          <!-- Geneva lake hint -->
-          <ellipse cx="480" cy="470" rx="300" ry="28" fill="#1d4ed8" opacity="0.15" />
-          <text x="480" y="505" text-anchor="middle" fill="#64748b" font-size="13">日内瓦 · CERN 一带</text>
+    <section aria-labelledby="map-heading">
+      <h2 id="map-heading">极简地区分布图（点击标注查看详情）</h2>
+      <div class="grid-2">
+        <div class="map-wrap">
+          <svg class="map" viewBox="0 0 820 520" role="img" aria-label="CERN Meyrin 与 Prévessin 极简地图">
+            <!-- Lake Geneva -->
+            <path d="M0 430 Q180 390 360 420 T820 400 L820 520 L0 520 Z" fill="#1e3a8a" opacity="0.35" />
+            <text x="120" y="470" fill="#64748b" font-size="12">日内瓦湖方向</text>
 
-          <!-- Central problem -->
-          <rect x="360" y="205" width="240" height="88" rx="14" fill="#1e293b" stroke="#5eead4" stroke-width="2" />
-          <text x="480" y="235" text-anchor="middle" fill="#e2e8f0" font-size="15" font-weight="700">信息散落各处</text>
-          <text x="480" y="258" text-anchor="middle" fill="#94a3b8" font-size="12">树状目录 · 不同命令 · 不同协议</text>
-          <text x="480" y="278" text-anchor="middle" fill="#94a3b8" font-size="12">新人找不到 · 人走知识断</text>
+            <!-- Border -->
+            <line x1="400" y1="30" x2="400" y2="400" stroke="#94a3b8" stroke-width="2" stroke-dasharray="8 6" opacity="0.7" />
+            <text x="250" y="24" fill="#fca5a5" font-size="12" text-anchor="middle">瑞士 · Meyrin</text>
+            <text x="560" y="24" fill="#93c5fd" font-size="12" text-anchor="middle">法国 · Prévessin</text>
+            <text x="400" y="415" fill="#64748b" font-size="11" text-anchor="middle">法瑞边界（示意）</text>
 
-          <!-- IBM VM/CMS -->
-          <g>
-            <rect x="40" y="40" width="170" height="110" rx="12" fill="#172554" stroke="#3b82f6" stroke-width="2" />
-            <text x="125" y="68" text-anchor="middle" fill="#bfdbfe" font-weight="700">IBM VM/CMS</text>
-            <text x="125" y="90" text-anchor="middle" fill="#93c5fd" font-size="12">批处理 · 磁带 · 主磁盘</text>
-            <text x="125" y="108" text-anchor="middle" fill="#93c5fd" font-size="12">CERNDOC 文档登记</text>
-            <text x="125" y="126" text-anchor="middle" fill="#64748b" font-size="11">~60 GB 用户盘</text>
-            <line x1="210" y1="95" x2="360" y2="230" stroke="#334155" stroke-width="2" stroke-dasharray="6 4" />
-          </g>
+            <!-- LEP ring hint -->
+            <ellipse cx="410" cy="250" rx="300" ry="130" fill="none" stroke="#7c3aed" stroke-width="1.5" stroke-dasharray="5 4" opacity="0.55" />
+            <text x="410" y="118" fill="#a78bfa" font-size="11" text-anchor="middle">LEP 环 27 km（地下 · 示意）</text>
+            <text x="560" y="250" fill="#c4b5fd" font-size="10">Point 2 · Sergy</text>
+            <text x="250" y="250" fill="#c4b5fd" font-size="10">Point 1 · Meyrin</text>
 
-          <!-- VAX/VMS -->
-          <g>
-            <rect x="250" y="40" width="170" height="110" rx="12" fill="#451a03" stroke="#f59e0b" stroke-width="2" />
-            <text x="335" y="68" text-anchor="middle" fill="#fde68a" font-weight="700">VAX / VMS</text>
-            <text x="335" y="90" text-anchor="middle" fill="#fcd34d" font-size="12">交互式开发 · RPC 文档</text>
-            <text x="335" y="108" text-anchor="middle" fill="#fcd34d" font-size="12">VAX/NOTES 讨论</text>
-            <text x="335" y="126" text-anchor="middle" fill="#64748b" font-size="11">~5 GB · 136 终端线</text>
-            <line x1="335" y1="150" x2="420" y2="205" stroke="#334155" stroke-width="2" stroke-dasharray="6 4" />
-          </g>
+            <!-- Pins -->
+            <g class="pin" data-id="b513" transform="translate(220,140)">
+              <circle r="14" fill="#3b82f6" />
+              <text y="4" text-anchor="middle" fill="#fff" font-size="10" font-weight="700">513</text>
+            </g>
+            <g class="pin" data-id="b31" transform="translate(300,200)">
+              <circle r="12" fill="#5eead4" />
+              <text y="4" text-anchor="middle" fill="#042f2e" font-size="9" font-weight="700">31</text>
+            </g>
+            <g class="pin" data-id="scr" transform="translate(180,260)">
+              <circle r="10" fill="#f472b6" />
+              <text y="3" text-anchor="middle" fill="#fff" font-size="8">SCR</text>
+            </g>
+            <g class="pin" data-id="pcr" transform="translate(580,180)">
+              <circle r="14" fill="#f59e0b" />
+              <text y="4" text-anchor="middle" fill="#111" font-size="9" font-weight="700">PCR</text>
+            </g>
+            <g class="pin" data-id="lep-exp" transform="translate(650,300)">
+              <circle r="11" fill="#a78bfa" />
+              <text y="3" text-anchor="middle" fill="#fff" font-size="8">实验</text>
+            </g>
+            <g class="pin" data-id="remote" transform="translate(500,330)">
+              <circle r="9" fill="#94a3b8" />
+              <text y="3" text-anchor="middle" fill="#111" font-size="7">远端</text>
+            </g>
 
-          <!-- Unix -->
-          <g>
-            <rect x="460" y="40" width="170" height="110" rx="12" fill="#052e16" stroke="#22c55e" stroke-width="2" />
-            <text x="545" y="68" text-anchor="middle" fill="#bbf7d0" font-weight="700">Unix</text>
-            <text x="545" y="90" text-anchor="middle" fill="#86efac" font-size="12">1982 起进入 CERN</text>
-            <text x="545" y="108" text-anchor="middle" fill="#86efac" font-size="12">Usenet / 分析代码</text>
-            <text x="545" y="126" text-anchor="middle" fill="#64748b" font-size="11">1989 渗透率仍偏低</text>
-            <line x1="545" y1="150" x2="480" y2="205" stroke="#334155" stroke-width="2" stroke-dasharray="6 4" />
-          </g>
+            <!-- Distance hint -->
+            <line x1="220" y1="260" x2="580" y2="190" stroke="#475569" stroke-width="1" stroke-dasharray="4 3" />
+            <text x="400" y="175" fill="#64748b" font-size="10" text-anchor="middle">Meyrin ↔ Prévessin ~3 km [5]</text>
+          </svg>
+        </div>
 
-          <!-- Mac / PC -->
-          <g>
-            <rect x="670" y="40" width="170" height="110" rx="12" fill="#2e1065" stroke="#a78bfa" stroke-width="2" />
-            <text x="755" y="68" text-anchor="middle" fill="#ddd6fe" font-weight="700">Mac / PC</text>
-            <text x="755" y="90" text-anchor="middle" fill="#c4b5fd" font-size="12">个人工作站兴起</text>
-            <text x="755" y="108" text-anchor="middle" fill="#c4b5fd" font-size="12">Apollo · VAXstation</text>
-            <text x="755" y="126" text-anchor="middle" fill="#64748b" font-size="11">1989 RISC 工作站出现</text>
-            <line x1="755" y1="150" x2="540" y2="205" stroke="#334155" stroke-width="2" stroke-dasharray="6 4" />
-          </g>
-
-          <!-- Info silos bottom -->
-          <g>
-            <rect x="70" y="340" width="150" height="72" rx="10" fill="#3f1d2e" stroke="#fb7185" />
-            <text x="145" y="368" text-anchor="middle" fill="#fecdd3" font-size="12">文件系统树</text>
-            <text x="145" y="388" text-anchor="middle" fill="#fda4af" font-size="11">Unix / VMS 目录</text>
-          </g>
-          <g>
-            <rect x="250" y="340" width="150" height="72" rx="10" fill="#3f1d2e" stroke="#fb7185" />
-            <text x="325" y="368" text-anchor="middle" fill="#fecdd3" font-size="12">VMS HELP</text>
-            <text x="325" y="388" text-anchor="middle" fill="#fda4af" font-size="11">命令链式导航</text>
-          </g>
-          <g>
-            <rect x="430" y="340" width="150" height="72" rx="10" fill="#3f1d2e" stroke="#fb7185" />
-            <text x="505" y="368" text-anchor="middle" fill="#fecdd3" font-size="12">UUCP News</text>
-            <text x="505" y="388" text-anchor="middle" fill="#fda4af" font-size="11">树形 newsgroup</text>
-          </g>
-          <g>
-            <rect x="610" y="340" width="150" height="72" rx="10" fill="#3f1d2e" stroke="#fb7185" />
-            <text x="685" y="368" text-anchor="middle" fill="#fecdd3" font-size="12">Enquire</text>
-            <text x="685" y="388" text-anchor="middle" fill="#fda4af" font-size="11">Tim 个人链接网</text>
-          </g>
-
-          <line x1="145" y1="340" x2="430" y2="293" stroke="#475569" stroke-width="1.5" />
-          <line x1="325" y1="340" x2="460" y2="293" stroke="#475569" stroke-width="1.5" />
-          <line x1="505" y1="340" x2="500" y2="293" stroke="#475569" stroke-width="1.5" />
-          <line x1="685" y1="340" x2="560" y2="293" stroke="#475569" stroke-width="1.5" />
-
-          <!-- Web proposal hint -->
-          <rect x="760" y="320" width="170" height="92" rx="12" fill="#134e4a" stroke="#5eead4" stroke-width="2" />
-          <text x="845" y="350" text-anchor="middle" fill="#ccfbf1" font-weight="700">1989 提案</text>
-          <text x="845" y="372" text-anchor="middle" fill="#99f6e4" font-size="12">Gateway + Browser</text>
-          <text x="845" y="392" text-anchor="middle" fill="#99f6e4" font-size="12">统一跳转，不搬库</text>
-          <line x1="760" y1="360" x2="600" y2="260" stroke="#5eead4" stroke-width="2" marker-end="url(#arrow)" />
-          <defs>
-            <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
-              <path d="M0,0 L8,4 L0,8 Z" fill="#5eead4" />
-            </marker>
-          </defs>
-        </svg>
-      </div>
-      <div class="legend">
-        <span class="ibm">主机 / 批处理平台</span>
-        <span class="vms">VAX 交互平台</span>
-        <span class="unix">Unix 平台</span>
-        <span class="mac">个人工作站</span>
-        <span class="info">信息孤岛 / 树形系统</span>
+        <div class="detail-panel" id="detail-panel" aria-live="polite">
+          <h3>Building 513 · Computer Centre</h3>
+          <p class="meta"><span class="tag ch">Meyrin · 瑞士侧</span> 1970 建成数据中心 [8]</p>
+          <ul>
+            <li><strong>IBM VM/CMS（CERNVM）</strong>：批处理 + 磁带 + 主磁盘；~60 GB 用户盘 [1]</li>
+            <li><strong>IBM 总容量</strong>：约 20 CU；磁带驱动 32 台（IBM 体系）[1]</li>
+            <li><strong>中央 VAX</strong>：VXCRNA（8650）+ VXCRNB（8800），~5 GB 用户盘 [1]</li>
+            <li><strong>终端</strong>：公共集群 513-R-52 [9]</li>
+            <li><strong>备注</strong>：1991 欧洲 80% 国际 Internet 容量在此楼 [10]（稍晚于本页主时间窗）</li>
+          </ul>
+        </div>
       </div>
     </section>
 
-    <section aria-labelledby="disk-title">
-      <h2 id="disk-title">容量对比：同一机构，不同「世界」（1987 数据）</h2>
-      <div class="bar-chart" role="list">
-        <div class="bar-row" role="listitem">
-          <div class="bar-label">IBM VM/CMS</div>
-          <div class="bar-track" aria-hidden="true"><div class="bar-fill" style="width:100%;background:var(--ibm)"></div></div>
-          <div class="bar-value">~60 GB</div>
+    <section aria-labelledby="cap-heading">
+      <h2 id="cap-heading">容量对比（Computer Centre · 1987 数据）</h2>
+      <div class="bars">
+        <div class="bar-row">
+          <div>IBM 总算力</div>
+          <div class="track"><div class="fill" style="width:100%;background:var(--ibm)"></div></div>
+          <div>~20 CU</div>
         </div>
-        <div class="bar-row" role="listitem">
-          <div class="bar-label">VAX/VMS</div>
-          <div class="bar-track" aria-hidden="true"><div class="bar-fill" style="width:8.3%;background:var(--vms)"></div></div>
-          <div class="bar-value">~5 GB</div>
+        <div class="bar-row">
+          <div>VAX 集群</div>
+          <div class="track"><div class="fill" style="width:22.5%;background:var(--vax)"></div></div>
+          <div>~4.5 CU</div>
+        </div>
+        <div class="bar-row">
+          <div>VM 用户盘</div>
+          <div class="track"><div class="fill" style="width:100%;background:var(--ibm)"></div></div>
+          <div>60 GB</div>
+        </div>
+        <div class="bar-row">
+          <div>VAX 用户盘</div>
+          <div class="track"><div class="fill" style="width:8.3%;background:var(--vax)"></div></div>
+          <div>5 GB</div>
+        </div>
+        <div class="bar-row">
+          <div>IBM 磁带机</div>
+          <div class="track"><div class="fill" style="width:100%;background:var(--ibm)"></div></div>
+          <div>32 台</div>
+        </div>
+        <div class="bar-row">
+          <div>VAX 磁带机</div>
+          <div class="track"><div class="fill" style="width:12.5%;background:var(--vax)"></div></div>
+          <div>4 台</div>
         </div>
       </div>
-      <p class="note" style="margin-top:1rem">
-        IBM 仍是批处理、磁带、公共交互服务的主力；VAX 强在交互开发，但磁盘与磁带资源远小于 IBM 体系。
-      </p>
     </section>
 
-    <section aria-labelledby="table-title">
-      <h2 id="table-title">1989 前后 CERN 计算环境一览</h2>
+    <section aria-labelledby="table-heading">
+      <h2 id="table-heading">地区 · 机器 · 数量 · 角色</h2>
       <table>
         <thead>
           <tr>
-            <th scope="col">平台</th>
-            <th scope="col">角色</th>
-            <th scope="col">可查数据 / 说明</th>
+            <th>地区 / 建筑</th>
+            <th>主要机器 / 数量</th>
+            <th>容量 / 规模</th>
+            <th>角色</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td>IBM VM/CMS</td>
-            <td>批处理、磁带、主磁盘、公共交互</td>
-            <td>总容量约 20 CU；用户磁盘约 60 GB；CERNDOC 文档系统</td>
+            <td><span class="tag ch">Meyrin</span> Building 513</td>
+            <td>CERNVM；IBMA/IBMB；VXCRNA；VXCRNB</td>
+            <td>~20 CU IBM；~4.5 CU VAX；60 + 5 GB 磁盘 [1]</td>
+            <td>中央批处理、文档（CERNDOC）、公共交互 [1][2]</td>
           </tr>
           <tr>
-            <td>VAX/VMS</td>
-            <td>交互式开发、调试、网络</td>
-            <td>8650 + 8800；用户磁盘约 5 GB；72+64 条 Index 终端线</td>
+            <td><span class="tag ch">Meyrin</span> Building 31</td>
+            <td>Tim 办公室；NeXT（1990 起）</td>
+            <td>—</td>
+            <td>1989 提案；1990 WWW 代码 [11][12]</td>
           </tr>
           <tr>
-            <td>Unix</td>
-            <td>分析、News、逐步增长</td>
-            <td>1982 首套 Unix；1989 仍非主导平台</td>
+            <td><span class="tag ch">Meyrin</span> SCR</td>
+            <td>报警系统控制台等</td>
+            <td>50+ 计算机（LEP 报警全网）[5]</td>
+            <td>技术 / 安全控制，距 PCR ~3 km [5]</td>
           </tr>
           <tr>
-            <td>Mac / Apollo / PC</td>
-            <td>个人与小团队工作站</td>
-            <td>LEP 时代实验区集群；1989 RISC 工作站出现</td>
+            <td><span class="tag fr">Prévessin</span> PCR</td>
+            <td>Apollo 3000/3500；PC/AT 前端；Oracle 服务器</td>
+            <td>56 台前端 PC；~30 kB/s 链路 [4]</td>
+            <td>LEP / SPS 加速器控制；1989.7 首束流 [6]</td>
           </tr>
           <tr>
-            <td>Cray / 大型机</td>
-            <td>高能物理批处理</td>
-            <td>与 VM 配合承担 LEP 数据批处理</td>
+            <td><span class="tag fr">Prévessin</span> Block 4</td>
+            <td>公共终端集群</td>
+            <td>892-SD-003 [9]</td>
+            <td>远程用户接入 CERN 网络</td>
           </tr>
           <tr>
-            <td>FATMEN 支持的变种</td>
-            <td>跨平台文件/磁带访问</td>
-            <td>VM/CMS、MVS、VMS、Apollo、HP/UX、Sun、SGI、RS/6000…「许多不兼容变种」</td>
+            <td><span class="tag ring">LEP 环</span> 8 access points</td>
+            <td>实验区集群；远端 PC clone</td>
+            <td>4 个地下 LEP 实验 [5]</td>
+            <td>数据采集 / 本地重建；Token Ring 网络 [4]</td>
+          </tr>
+          <tr>
+            <td>欧洲各 institute</td>
+            <td>VM、VMS、Unix、Apollo…</td>
+            <td>FATMEN 支持 10+ OS 变种 [3]</td>
+            <td>分布式协作；「高度异构」[3]</td>
           </tr>
         </tbody>
       </table>
     </section>
 
-    <section aria-labelledby="why-title">
-      <h2 id="why-title">为什么 Tim 必须做「跨平台」？</h2>
-      <p>
-        1989 年提案写得很直白：必须从 <strong>VM/CMS、Macintosh、VAX/VMS、Unix</strong>
-        访问同一信息；旧系统不能搬空，要用 Gateway 映射；组织真实结构是<strong>网</strong>，存储却是<strong>树</strong>。
-      </p>
-      <p class="note">
-        FATMEN 委员会 1989 年成立，正是因为 LEP 实验数据将爆炸式增长，而物理学者分散在欧美各 institute，
-        计算环境「distributed, and highly heterogeneous」—— 没有统一文档视图，协作成本极高。
-      </p>
+    <section aria-labelledby="refs-heading">
+      <h2 id="refs-heading">引用资料（全部）</h2>
+      <div class="refs">
+        <ol>
+          <li>
+            CERN Computer Newsletter <strong>187</strong>, January–February 1987 —
+            IBM/VAX 容量、磁盘（60 GB vs 5 GB）、VXCRNA/VXCRNB、Index 终端线、磁带机数量。
+            <a href="http://cds.cern.ch/record/1292500">http://cds.cern.ch/record/1292500</a>
+          </li>
+          <li>
+            Tim Berners-Lee, <em>Information Management: A Proposal</em>, March 1989 —
+            VM/CMS、VMS、Unix、Mac 四类 OS；CERNDOC、Gateway、异构访问需求。
+            <a href="https://www.w3.org/History/1989/proposal.html">https://www.w3.org/History/1989/proposal.html</a>
+          </li>
+          <li>
+            FATMEN Committee, <em>FATMEN Report</em>, CERN DD/89/15, 1989 —
+            LEP 数据规模；VM/CMS、MVS、VMS、Unix 多平台；「distributed, highly heterogeneous」。
+            <a href="https://cds.cern.ch/record/2296370/files/fatmain.pdf">https://cds.cern.ch/record/2296370/files/fatmain.pdf</a>
+          </li>
+          <li>
+            S. Peters et al., LEP Control System architecture (1989) —
+            PCR Apollo 工作站；56 前端 PC；Token Ring；远端 building PC clone。
+            <a href="https://cds.cern.ch/record/292481/files/sl-95-091.pdf">https://cds.cern.ch/record/292481/files/sl-95-091.pdf</a>
+          </li>
+          <li>
+            LEP Alarm System paper —
+            8 access points；PCR 在 Prévessin，SCR 在 Meyrin（~3 km）；50+ 计算机、5 平台、4 OS。
+            <a href="https://inspirehep.net/files/13cac7b8a3d0eafdeae34610eef64afb">inspirehep.net/files/…/LEP Alarm System</a>
+          </li>
+          <li>
+            CERN Courier, «When LEP saw beam» —
+            1989-07-14 首束流；Prévessin 控制室。
+            <a href="https://cerncourier.com/a/when-lep-cerns-first-big-collider-saw-beam/">cerncourier.com/…/when-lep-saw-beam</a>
+          </li>
+          <li>
+            P. Dimou, <em>Names related to computer networks at CERN</em>, CERN-DD-CS-G48, June 1988 —
+            网络对象名 → 物理地址映射（最全地点索引）。
+            <a href="https://sandbox-cds-rdm.web.cern.ch/records/hzb1n-15x80">sandbox-cds-rdm…/hzb1n-15x80</a>
+          </li>
+          <li>
+            CERN &amp; its Neighbours — Meyrin site；Building 513 数据中心（1970）。
+            <a href="https://voisins.cern/en/meyrin-site-point-1/">voisins.cern/en/meyrin-site-point-1</a>
+          </li>
+          <li>
+            CERN Bulletin — 公共终端集群位置（513-R-52、892-SD-003 等）。
+            <a href="http://cds.cern.ch/record/1726065">http://cds.cern.ch/record/1726065</a>
+          </li>
+          <li>
+            F. Flückiger, «How the internet came to CERN», home.cern —
+            1991 年 Building 513 承载欧洲 80% 国际 Internet 容量；Building 600 RIPE 会议。
+            <a href="https://home.cern/how-internet-came-cern/">https://home.cern/how-internet-came-cern/</a>
+          </li>
+          <li>
+            Tim Berners-Lee, Press FAQ —
+            Building 31 二楼办公室；1989 提案与 1990 NeXT 开发位置。
+            <a href="https://www.w3.org/People/Berners-Lee/FAQ.html">https://www.w3.org/People/Berners-Lee/FAQ.html</a>
+          </li>
+          <li>
+            David Galbraith interview with Tim BL — Building 31 房间 2-010 / 2-012 细节。
+            <a href="https://davidgalbraith.org/uncategorized/the-exact-location-where-the-web-was-invented/2343/">davidgalbraith.org/…/exact-location</a>
+          </li>
+          <li>
+            F. Hemmer, <em>CERN Computing Historical Perspective</em> (LEP era slides) —
+            1988–1989 IBM/VM + VAX/VMS + 工作站 + PC 演进。
+            <a href="https://indico.cern.ch/event/1052077/attachments/2443877/4187384/Hemmer-CERN-AT-Shift-project-20220512.pdf">indico.cern.ch/…/Hemmer-…pdf</a>
+          </li>
+          <li>
+            CERN Courier, «Computing at CERN: the mainframe era» —
+            LEP 时代 IBM/Siemens 主机、VAX 中央服务、Apollo 工作站背景。
+            <a href="https://cerncourier.com/a/computing-at-cern-the-mainframe-era/">cerncourier.com/…/mainframe-era</a>
+          </li>
+          <li>
+            CERN WWW Project History —
+            1991 line-mode browser 在 PRIAM VAX、RS6000、Sun4 等 central machines 发布。
+            <a href="http://info.cern.ch/hypertext/WWW/History.html">http://info.cern.ch/hypertext/WWW/History.html</a>
+          </li>
+        </ol>
+      </div>
     </section>
 
-    <footer class="sources">
-      <p><strong>数据来源（可查）：</strong></p>
-      <ul>
-        <li>CERN Computer Newsletter 187, Jan–Feb 1987 — IBM/VAX 容量与磁盘对比</li>
-        <li>FATMEN Report / DD/89/15, 1989 — 多平台异构与 LEP 数据规模</li>
-        <li>Tim Berners-Lee, <em>Information Management: A Proposal</em>, March 1989 — 四类 OS 与 Gateway 思路</li>
-        <li>F. Hemmer, <em>CERN Computing Historical Perspective</em> (LEP era slides) — 1988–1989 平台演进</li>
-      </ul>
-      <p>
-        延伸阅读：
-        <a href="web-birth-story.md">web-birth-story.md</a> ·
-        <a href="https://www.w3.org/History/1989/proposal.html">1989 提案原文</a>
-      </p>
+    <footer>
+      相关文档：<a href="web-birth-story.md">web-birth-story.md</a> ·
+      <a href="frontend-eras-summary.md">frontend-eras-summary.md</a>
+      · 地图为示意，精确坐标请查 [7] Dimou 报告
     </footer>
   </main>
+
+  <script>
+    const SITES = {
+      b513: {
+        title: 'Building 513 · Computer Centre',
+        meta: '<span class="tag ch">Meyrin · 瑞士侧</span> 1970 建成 [8]',
+        items: [
+          '<strong>IBM VM/CMS（CERNVM）</strong>：~60 GB 用户盘；CERNDOC 文档 [1][2]',
+          '<strong>IBM 总算力</strong>：~20 CU；32 台磁带驱动 [1]',
+          '<strong>VXCRNA</strong>：VAX 8650，~1.5 CU，32 MB 内存 [1]',
+          '<strong>VXCRNB</strong>：VAX 8800，~3 CU，双 CPU [1]',
+          '<strong>VAX 用户盘</strong>：~5 GB + 1 GB scratch [1]',
+          '<strong>终端</strong>：72 + 64 条 Index 线；公共集群 513-R-52 [1][9]',
+        ],
+      },
+      b31: {
+        title: 'Building 31 · CN/DN 办公区',
+        meta: '<span class="tag ch">Meyrin</span> 法瑞边界附近 · Tim Berners-Lee [11][12]',
+        items: [
+          '<strong>1989</strong>：2-010 写《Information Management: A Proposal》[11][12]',
+          '<strong>1990.9 起</strong>：2-012 用 NeXT 写 WWW 代码与首个浏览器 [11][12]',
+          '<strong>同层</strong>：Documentation et Données / Computing & Networking HQ',
+          '<strong>容量</strong>：个人工作站级，非中央批处理',
+        ],
+      },
+      scr: {
+        title: 'Meyrin · Technical & Safety Control Room (SCR)',
+        meta: '<span class="tag ch">Meyrin</span> 距 PCR 约 3 km [5]',
+        items: [
+          '<strong>LEP 报警系统</strong>：人员与设备安全通道 [5]',
+          '<strong>规模</strong>：全系统 50+ 计算机，5 种平台，4 种 OS [5]',
+          '<strong>与 PCR 分工</strong>：加速器操作 vs 技术安全 [5]',
+        ],
+      },
+      pcr: {
+        title: 'Prévessin Control Room (PCR)',
+        meta: '<span class="tag fr">Prévessin · 法国侧</span> LEP/SPS 控制 [4][6]',
+        items: [
+          '<strong>1989.7.14</strong>：LEP 首束流在此操作 [6]',
+          '<strong>控制台</strong>：Apollo 3000/3500 工作站（Unix）[4]',
+          '<strong>前端</strong>：56 台 386 PC + VME 机箱 [4]',
+          '<strong>网络</strong>：Token Ring；后与 Swiss 侧 Oracle FDDI 互联 [4]',
+          '<strong>远端</strong>：LEP 各 surface building 的 PC clone (SCO XENIX) [4]',
+        ],
+      },
+      'lep-exp': {
+        title: 'LEP 实验点（环上偶数点 · 地下）',
+        meta: '<span class="tag ring">LEP 环</span> 8 access points [4][5]',
+        items: [
+          '<strong>Point 1</strong>：近 Meyrin 主 site [6]',
+          '<strong>Point 2</strong>：Sergy（法国）[6]',
+          '<strong>4 个 LEP 实验</strong>：ALEPH、DELPHI、L3、OPAL 等分布式集群 [3][13]',
+          '<strong>1988 起</strong>：实验区 workstation cluster 做数据重建 [13]',
+          '<strong>私有集群</strong>：多为 VAX/VMS 分析环境 [13]',
+        ],
+      },
+      remote: {
+        title: '远端 institute & 欧洲协作节点',
+        meta: '非 CERN 本地 · FATMEN 跨平台 [3]',
+        items: [
+          '<strong>平台</strong>：VM/CMS、MVS、VMS、Apollo、HP/UX、Sun、SGI、RS/6000… [3]',
+          '<strong>问题</strong>：「many times as many incompatible variants」[3]',
+          '<strong>统一接口</strong>：FATMEN 让 CERNVM 与 Apollo 控制室用同一套命令取数据 [3]',
+          '<strong>数量</strong>：无全球精确台数统计；物理组分散欧美各所 [3]',
+        ],
+      },
+    };
+
+    const panel = document.getElementById('detail-panel');
+    const pins = document.querySelectorAll('.pin');
+
+    function showSite(id) {
+      const site = SITES[id];
+      if (!site) return;
+      pins.forEach((p) => p.classList.toggle('active', p.dataset.id === id));
+      panel.innerHTML =
+        '<h3>' + site.title + '</h3>' +
+        '<p class="meta">' + site.meta + '</p>' +
+        '<ul>' + site.items.map((i) => '<li>' + i + '</li>').join('') + '</ul>';
+    }
+
+    pins.forEach((pin) => {
+      pin.addEventListener('click', () => showSite(pin.dataset.id));
+      pin.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          showSite(pin.dataset.id);
+        }
+      });
+      pin.setAttribute('tabindex', '0');
+      pin.setAttribute('role', 'button');
+    });
+  </script>
 </body>
 </html>
