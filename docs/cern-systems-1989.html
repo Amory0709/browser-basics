@@ -6,19 +6,18 @@
   <title>1989 CERN 计算设施 · 地区分布与容量</title>
   <style>
     :root {
-      --bg: #0a1020;
-      --panel: #121c30;
-      --panel2: #18243c;
-      --text: #e8edf7;
-      --muted: #93a4c3;
-      --accent: #5eead4;
-      --ch: #ef4444;
-      --fr: #3b82f6;
-      --line: #2a3858;
-      --ibm: #60a5fa;
-      --vax: #fbbf24;
-      --ws: #a78bfa;
-      --ctrl: #f472b6;
+      --slb-blue: #0014dc;
+      --slb-navy: #003366;
+      --bg: #ffffff;
+      --panel: #ffffff;
+      --panel2: #f8fafc;
+      --text: #0f172a;
+      --muted: #64748b;
+      --accent: var(--slb-blue);
+      --line: #e2e8f0;
+      --ibm: #0014dc;
+      --vax: #4f7cff;
+      --light-blue: #eef4ff;
     }
 
     * { box-sizing: border-box; }
@@ -26,7 +25,7 @@
     body {
       margin: 0;
       font-family: "Segoe UI", system-ui, sans-serif;
-      background: radial-gradient(circle at 20% 0%, #172554 0%, var(--bg) 50%);
+      background: var(--bg);
       color: var(--text);
       line-height: 1.55;
     }
@@ -41,6 +40,15 @@
       font-size: clamp(1.5rem, 4vw, 2.2rem);
       margin: 0 0 0.5rem;
       line-height: 1.2;
+      color: var(--slb-navy);
+      font-weight: 600;
+    }
+
+    h2 {
+      font-size: 1.05rem;
+      margin: 0 0 0.85rem;
+      color: var(--slb-navy);
+      font-weight: 600;
     }
 
     .lede {
@@ -52,10 +60,11 @@
     .note-box {
       border-left: 3px solid var(--accent);
       padding: 0.6rem 0.9rem;
-      background: rgba(94, 234, 212, 0.06);
+      background: var(--light-blue);
       color: var(--muted);
       font-size: 0.92rem;
       margin-bottom: 1.25rem;
+      border-radius: 0 8px 8px 0;
     }
 
     .grid-2 {
@@ -71,14 +80,10 @@
     section {
       background: var(--panel);
       border: 1px solid var(--line);
-      border-radius: 14px;
+      border-radius: 8px;
       padding: 1rem 1.1rem;
       margin-bottom: 1rem;
-    }
-
-    h2 {
-      font-size: 1.05rem;
-      margin: 0 0 0.85rem;
+      box-shadow: 0 1px 2px rgba(0, 20, 220, 0.04);
     }
 
     .map-wrap {
@@ -92,7 +97,7 @@
 
     .pin { cursor: pointer; transition: transform 0.15s ease; }
     .pin:hover { transform: scale(1.08); }
-    .pin.active circle { stroke: #fff; stroke-width: 2.5; }
+    .pin.active circle { stroke: var(--slb-blue); stroke-width: 3; }
 
     .detail-panel {
       min-height: 280px;
@@ -130,9 +135,9 @@
     }
 
     .stat {
-      background: var(--panel);
+      background: var(--panel2);
       border: 1px solid var(--line);
-      border-radius: 10px;
+      border-radius: 8px;
       padding: 0.85rem;
     }
 
@@ -140,6 +145,7 @@
       display: block;
       font-size: 1.35rem;
       color: var(--accent);
+      font-weight: 700;
     }
 
     .stat span { color: var(--muted); font-size: 0.85rem; }
@@ -156,7 +162,7 @@
 
     .track {
       height: 12px;
-      background: #0f172a;
+      background: #eef2f7;
       border-radius: 999px;
       overflow: hidden;
     }
@@ -186,9 +192,9 @@
       margin-right: 0.25rem;
     }
 
-    .tag.ch { background: rgba(239,68,68,.15); color: #fca5a5; }
-    .tag.fr { background: rgba(59,130,246,.15); color: #93c5fd; }
-    .tag.ring { background: rgba(167,139,250,.15); color: #c4b5fd; }
+    .tag.ch { background: var(--light-blue); color: var(--slb-navy); }
+    .tag.fr { background: #e8f0fe; color: var(--slb-blue); }
+    .tag.ring { background: #f1f5f9; color: var(--muted); border: 1px solid var(--line); }
 
     .refs {
       font-size: 0.86rem;
@@ -200,7 +206,9 @@
     }
 
     .refs li { margin-bottom: 0.55rem; }
-    .refs a { color: #93c5fd; word-break: break-word; }
+    .refs a { color: var(--slb-blue); word-break: break-word; }
+
+    footer a { color: var(--slb-blue); }
 
     footer {
       margin-top: 1rem;
@@ -238,49 +246,49 @@
         <div class="map-wrap">
           <svg class="map" viewBox="0 0 820 520" role="img" aria-label="CERN Meyrin 与 Prévessin 极简地图">
             <!-- Lake Geneva -->
-            <path d="M0 430 Q180 390 360 420 T820 400 L820 520 L0 520 Z" fill="#1e3a8a" opacity="0.35" />
+            <path d="M0 430 Q180 390 360 420 T820 400 L820 520 L0 520 Z" fill="#dbeafe" opacity="0.8" />
             <text x="120" y="470" fill="#64748b" font-size="12">日内瓦湖方向</text>
 
             <!-- Border -->
-            <line x1="400" y1="30" x2="400" y2="400" stroke="#94a3b8" stroke-width="2" stroke-dasharray="8 6" opacity="0.7" />
-            <text x="250" y="24" fill="#fca5a5" font-size="12" text-anchor="middle">瑞士 · Meyrin</text>
-            <text x="560" y="24" fill="#93c5fd" font-size="12" text-anchor="middle">法国 · Prévessin</text>
-            <text x="400" y="415" fill="#64748b" font-size="11" text-anchor="middle">法瑞边界（示意）</text>
+            <line x1="400" y1="30" x2="400" y2="400" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="8 6" />
+            <text x="250" y="24" fill="#003366" font-size="12" text-anchor="middle">瑞士 · Meyrin</text>
+            <text x="560" y="24" fill="#0014dc" font-size="12" text-anchor="middle">法国 · Prévessin</text>
+            <text x="400" y="415" fill="#94a3b8" font-size="11" text-anchor="middle">法瑞边界（示意）</text>
 
             <!-- LEP ring hint -->
-            <ellipse cx="410" cy="250" rx="300" ry="130" fill="none" stroke="#7c3aed" stroke-width="1.5" stroke-dasharray="5 4" opacity="0.55" />
-            <text x="410" y="118" fill="#a78bfa" font-size="11" text-anchor="middle">LEP 环 27 km（地下 · 示意）</text>
-            <text x="560" y="250" fill="#c4b5fd" font-size="10">Point 2 · Sergy</text>
-            <text x="250" y="250" fill="#c4b5fd" font-size="10">Point 1 · Meyrin</text>
+            <ellipse cx="410" cy="250" rx="300" ry="130" fill="none" stroke="#93c5fd" stroke-width="1.5" stroke-dasharray="5 4" opacity="0.7" />
+            <text x="410" y="118" fill="#64748b" font-size="11" text-anchor="middle">LEP 环 27 km（地下 · 示意）</text>
+            <text x="560" y="250" fill="#64748b" font-size="10">Point 2 · Sergy</text>
+            <text x="250" y="250" fill="#64748b" font-size="10">Point 1 · Meyrin</text>
 
             <!-- Pins -->
             <g class="pin" data-id="b513" transform="translate(220,140)">
-              <circle r="14" fill="#3b82f6" />
+              <circle r="14" fill="#0014dc" />
               <text y="4" text-anchor="middle" fill="#fff" font-size="10" font-weight="700">513</text>
             </g>
             <g class="pin" data-id="b31" transform="translate(300,200)">
-              <circle r="12" fill="#5eead4" />
-              <text y="4" text-anchor="middle" fill="#042f2e" font-size="9" font-weight="700">31</text>
+              <circle r="12" fill="#003366" />
+              <text y="4" text-anchor="middle" fill="#fff" font-size="9" font-weight="700">31</text>
             </g>
             <g class="pin" data-id="scr" transform="translate(180,260)">
-              <circle r="10" fill="#f472b6" />
+              <circle r="10" fill="#4f7cff" />
               <text y="3" text-anchor="middle" fill="#fff" font-size="8">SCR</text>
             </g>
             <g class="pin" data-id="pcr" transform="translate(580,180)">
-              <circle r="14" fill="#f59e0b" />
-              <text y="4" text-anchor="middle" fill="#111" font-size="9" font-weight="700">PCR</text>
+              <circle r="14" fill="#0014dc" />
+              <text y="4" text-anchor="middle" fill="#fff" font-size="9" font-weight="700">PCR</text>
             </g>
             <g class="pin" data-id="lep-exp" transform="translate(650,300)">
-              <circle r="11" fill="#a78bfa" />
+              <circle r="11" fill="#003366" />
               <text y="3" text-anchor="middle" fill="#fff" font-size="8">实验</text>
             </g>
             <g class="pin" data-id="remote" transform="translate(500,330)">
               <circle r="9" fill="#94a3b8" />
-              <text y="3" text-anchor="middle" fill="#111" font-size="7">远端</text>
+              <text y="3" text-anchor="middle" fill="#fff" font-size="7">远端</text>
             </g>
 
             <!-- Distance hint -->
-            <line x1="220" y1="260" x2="580" y2="190" stroke="#475569" stroke-width="1" stroke-dasharray="4 3" />
+            <line x1="220" y1="260" x2="580" y2="190" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4 3" />
             <text x="400" y="175" fill="#64748b" font-size="10" text-anchor="middle">Meyrin ↔ Prévessin ~3 km [5]</text>
           </svg>
         </div>
