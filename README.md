@@ -62,12 +62,17 @@ In GitHub **Settings → Secrets and variables → Actions → Variables**, add:
 
 Then run **Actions → Deploy GitHub Pages → Run workflow**, or push again to trigger a rebuild.
 
+## References
+
+See [docs/frontend-references.md](docs/frontend-references.md) for frontend history and industry reading.
+
 ## Project structure
 
 ```
 client/              React frontend demo app
 packages/yjs-room/   Reusable Yjs room + presenter permission library
 server/              Yjs WebSocket server
+docs/                Frontend learning references
 .github/workflows/   GitHub Pages CI
 render.yaml          Render deployment config
 scripts/             publish scripts
