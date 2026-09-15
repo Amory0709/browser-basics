@@ -61,11 +61,16 @@ bash scripts/publish-github.sh
 
 然后 **Actions → Deploy GitHub Pages → Run workflow**，或再 push 一次触发 rebuild。
 
+## 参考资料
+
+前端历史与行业动态的重要参考来源见 [docs/frontend-references.md](docs/frontend-references.md)。
+
 ## 项目结构
 
 ```
 client/              React 前端
 server/              Yjs WebSocket 服务
+docs/                前端学习参考资料
 .github/workflows/   GitHub Pages CI
 render.yaml          Render 部署配置
 scripts/             发布脚本
