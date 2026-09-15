@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { YjsRoom } from '../lib/useYjsRoom';
-import type { UserColor, Viewport } from '../lib/types';
-import { useBoardViewport } from '../lib/useBoardViewport';
+import type { CollabRoom, Viewport } from '@browser-basics/yjs-room';
+import { useBoardViewport } from '@browser-basics/yjs-room';
+import type { UserColor } from '../lib/types';
 import { AdminControls, FollowBanner } from './AdminControls';
 import { ChatPanel, PresenceBar } from './ChatPanel';
 import { DrawingCanvas } from './DrawingCanvas';
@@ -9,7 +9,7 @@ import { LiveCursors } from './LiveCursors';
 import { createStickyNote, StickyNotesLayer } from './StickyNotes';
 
 type PlaygroundProps = {
-  room: YjsRoom;
+  room: CollabRoom;
   roomId: string;
   userName: string;
   userColor: UserColor;
@@ -59,13 +59,13 @@ export function Playground({ room, roomId, userName, userColor, onLeave }: Playg
 
   const onViewportChange = useCallback(
     (viewport: Viewport) => {
-      room.updateAdminViewport(viewport);
+      room.updatePresenterViewport(viewport);
     },
-    [room.updateAdminViewport],
+    [room.updatePresenterViewport],
   );
 
   const { viewport, transformStyle, bindViewportControls, isFollowing } = useBoardViewport({
-    isAdmin: room.isAdmin,
+    isPresenter: room.isPresenter,
     shouldFollow: room.shouldFollow,
     remoteViewport: room.roomMetaState.adminViewport,
     onViewportChange,
@@ -113,7 +113,7 @@ export function Playground({ room, roomId, userName, userColor, onLeave }: Playg
 
       <div className="playground-body">
         <main className="board-area">
-          <div ref={viewportHostRef} className={`board-viewport${room.isAdmin ? ' admin-viewport' : ''}`}>
+          <div ref={viewportHostRef} className={`board-viewport${room.isPresenter ? ' admin-viewport' : ''}`}>
             <div ref={boardContentRef} className="board-content" style={transformStyle}>
               <DrawingCanvas
                 strokes={room.strokes}
@@ -136,7 +136,7 @@ export function Playground({ room, roomId, userName, userColor, onLeave }: Playg
             </div>
           </div>
 
-          {room.isAdmin && (
+          {room.isPresenter && (
             <AdminControls
               users={room.awarenessUsers}
               adminName={adminName}

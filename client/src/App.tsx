@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { bootstrapHostAccess, stripHostKeyFromUrl, useCollabRoom } from '@browser-basics/yjs-room';
 import { Lobby } from './components/Lobby';
 import { Playground } from './components/Playground';
-import { bootstrapHostAccess, stripHostKeyFromUrl } from './lib/hostAuth';
 import { getPreferredDisplayName, savePreferredDisplayName } from './lib/sessionPrefs';
 import { pickColor } from './lib/types';
-import { useYjsRoom } from './lib/useYjsRoom';
 
 function getRoomFromUrl(): string | null {
   const room = new URLSearchParams(window.location.search).get('room')?.trim();
@@ -33,7 +32,12 @@ export default function App() {
     };
   }, []);
 
-  const room = useYjsRoom(session?.room ?? '', Boolean(session), session?.name ?? '', hostGranted);
+  const room = useCollabRoom({
+    roomId: session?.room ?? '',
+    enabled: Boolean(session),
+    userName: session?.name ?? '',
+    hostGranted,
+  });
 
   const userColor = useMemo(() => {
     if (!session) return pickColor(0);

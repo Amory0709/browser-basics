@@ -1,90 +1,68 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as Y from 'yjs';
 import { WebsocketProvider } from 'y-websocket';
-import type { AwarenessUser, RoomMeta, UserColor, Viewport } from './types';
-import { DEFAULT_VIEWPORT, getWsUrl } from './types';
+import { resolveWsUrl } from './config.js';
+import {
+  ensurePresenterViewport,
+  readRoomMeta,
+  shouldUserFollow,
+  writePresenterViewport,
+} from './room-meta.js';
+import type {
+  AwarenessUser,
+  CollabRoom,
+  CollabRoomCollections,
+  RoomMeta,
+  UserColor,
+  Viewport,
+} from './types.js';
+import { DEFAULT_COLLECTIONS, DEFAULT_VIEWPORT } from './types.js';
 
-export type YjsRoom = {
-  doc: Y.Doc;
-  provider: WebsocketProvider;
-  notes: Y.Map<Y.Map<unknown>>;
-  strokes: Y.Array<Y.Map<unknown>>;
-  messages: Y.Array<Y.Map<unknown>>;
-  roomMeta: Y.Map<unknown>;
-  followMap: Y.Map<boolean>;
-  awarenessUsers: AwarenessUser[];
-  connected: boolean;
-  synced: boolean;
-  localClientId: number;
-  isAdmin: boolean;
-  roomMetaState: RoomMeta;
-  shouldFollow: boolean;
-  setLocalUser: (name: string, color: UserColor) => void;
-  updateCursor: (x: number, y: number) => void;
-  updateAdminViewport: (viewport: Viewport) => void;
-  claimAdmin: (name: string) => void;
-  setGlobalFollow: (enabled: boolean) => void;
-  setUserFollow: (clientId: number, enabled: boolean) => void;
-  clearUserFollow: (clientId: number) => void;
+export type UseCollabRoomOptions = {
+  roomId: string;
+  enabled: boolean;
+  userName: string;
+  hostGranted: boolean;
+  wsUrl?: string;
+  collections?: Partial<CollabRoomCollections>;
 };
 
-function readNumber(value: unknown, fallback: number): number {
-  return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
-}
-
-function readViewport(meta: Y.Map<unknown>): Viewport {
-  const nested = meta.get('adminViewport');
-  if (nested instanceof Y.Map) {
-    return {
-      x: readNumber(nested.get('x'), 0),
-      y: readNumber(nested.get('y'), 0),
-      scale: readNumber(nested.get('scale'), 1),
-    };
-  }
-
-  if (nested && typeof nested === 'object') {
-    const record = nested as Partial<Viewport>;
-    return {
-      x: readNumber(record.x, 0),
-      y: readNumber(record.y, 0),
-      scale: readNumber(record.scale, 1),
-    };
-  }
-
-  return {
-    x: readNumber(meta.get('viewportX'), 0),
-    y: readNumber(meta.get('viewportY'), 0),
-    scale: readNumber(meta.get('viewportScale'), 1),
-  };
-}
-
-function readRoomMeta(meta: Y.Map<unknown>): RoomMeta {
-  return {
-    adminName: (meta.get('adminName') as string | null) ?? null,
-    globalFollow: Boolean(meta.get('globalFollow')),
-    adminViewport: readViewport(meta),
-  };
-}
-
-function shouldUserFollow(
-  clientId: number,
-  isAdmin: boolean,
-  meta: RoomMeta,
-  followMap: Y.Map<boolean>,
-): boolean {
-  if (isAdmin) return false;
-
-  const override = followMap.get(String(clientId));
-  if (override !== undefined) return override;
-  return meta.globalFollow;
-}
-
-export function useYjsRoom(
+function buildRoom(
   roomId: string,
-  enabled: boolean,
-  userName: string,
-  hostGranted: boolean,
-): YjsRoom | null {
+  wsUrl: string,
+  collections: CollabRoomCollections,
+): Pick<
+  CollabRoom,
+  'doc' | 'provider' | 'roomMeta' | 'followMap' | 'notes' | 'strokes' | 'messages'
+> {
+  const doc = new Y.Doc();
+  const provider = new WebsocketProvider(wsUrl, roomId.trim(), doc, {
+    connect: true,
+  });
+
+  return {
+    doc,
+    provider,
+    notes: doc.getMap(collections.notes),
+    strokes: doc.getArray(collections.strokes),
+    messages: doc.getArray(collections.messages),
+    roomMeta: doc.getMap('roomMeta'),
+    followMap: doc.getMap('followMap'),
+  };
+}
+
+export function useCollabRoom({
+  roomId,
+  enabled,
+  userName,
+  hostGranted,
+  wsUrl,
+  collections: collectionsOverride,
+}: UseCollabRoomOptions): CollabRoom | null {
+  const collections = useMemo(
+    () => ({ ...DEFAULT_COLLECTIONS, ...collectionsOverride }),
+    [collectionsOverride],
+  );
   const [awarenessUsers, setAwarenessUsers] = useState<AwarenessUser[]>([]);
   const [connected, setConnected] = useState(false);
   const [synced, setSynced] = useState(false);
@@ -97,27 +75,15 @@ export function useYjsRoom(
 
   const bundle = useMemo(() => {
     if (!enabled || !roomId.trim()) return null;
+    return buildRoom(roomId, wsUrl ?? resolveWsUrl(), collections);
+  }, [collections, enabled, roomId, wsUrl]);
 
-    const doc = new Y.Doc();
-    const provider = new WebsocketProvider(getWsUrl(), roomId.trim(), doc, {
-      connect: true,
-    });
-
-    const notes = doc.getMap<Y.Map<unknown>>('notes');
-    const strokes = doc.getArray<Y.Map<unknown>>('strokes');
-    const messages = doc.getArray<Y.Map<unknown>>('messages');
-    const roomMeta = doc.getMap<unknown>('roomMeta');
-    const followMap = doc.getMap<boolean>('followMap');
-
-    return { doc, provider, notes, strokes, messages, roomMeta, followMap };
-  }, [enabled, roomId]);
-
-  const isAdmin = Boolean(
+  const isPresenter = Boolean(
     bundle && hostGranted && roomMetaState.adminName && roomMetaState.adminName === userName,
   );
 
   const shouldFollow = bundle
-    ? shouldUserFollow(bundle.provider.awareness.clientID, isAdmin, roomMetaState, bundle.followMap)
+    ? shouldUserFollow(bundle.provider.awareness.clientID, isPresenter, roomMetaState, bundle.followMap)
     : false;
 
   useEffect(() => {
@@ -190,30 +156,27 @@ export function useYjsRoom(
     };
   }, [bundle]);
 
-  const claimAdmin = useCallback(
+  const claimPresenter = useCallback(
     (name: string) => {
       if (!bundle || !hostGranted) return;
 
       const current = bundle.roomMeta.get('adminName') as string | null | undefined;
-      const adminOnline = awarenessUsers.some((user) => user.name === current);
+      const presenterOnline = awarenessUsers.some((user) => user.name === current);
 
-      if (!hostGranted) return;
-      if (current && current !== name && adminOnline) return;
+      if (current && current !== name && presenterOnline) return;
 
       bundle.doc.transact(() => {
         bundle.roomMeta.set('adminName', name);
-        if (!bundle.roomMeta.has('adminViewport')) {
-          bundle.roomMeta.set('adminViewport', DEFAULT_VIEWPORT);
-        }
+        ensurePresenterViewport(bundle.roomMeta);
       });
     },
-    [bundle, hostGranted, awarenessUsers],
+    [awarenessUsers, bundle, hostGranted],
   );
 
   useEffect(() => {
     if (!bundle || !synced || !hostGranted) return;
-    claimAdmin(userName);
-  }, [bundle, synced, hostGranted, userName, claimAdmin]);
+    claimPresenter(userName);
+  }, [bundle, claimPresenter, hostGranted, synced, userName]);
 
   const setLocalUser = useCallback(
     (name: string, color: UserColor) => {
@@ -243,9 +206,9 @@ export function useYjsRoom(
   const viewportFrame = useRef<number | null>(null);
   const pendingViewport = useRef<Viewport | null>(null);
 
-  const updateAdminViewport = useCallback(
+  const updatePresenterViewport = useCallback(
     (viewport: Viewport) => {
-      if (!bundle || !isAdmin) return;
+      if (!bundle || !isPresenter) return;
 
       pendingViewport.current = viewport;
       if (viewportFrame.current !== null) return;
@@ -257,10 +220,7 @@ export function useYjsRoom(
         if (!next) return;
 
         bundle.doc.transact(() => {
-          bundle.roomMeta.set('adminViewport', next);
-          bundle.roomMeta.set('viewportX', next.x);
-          bundle.roomMeta.set('viewportY', next.y);
-          bundle.roomMeta.set('viewportScale', next.scale);
+          writePresenterViewport(bundle.roomMeta, next);
         });
 
         const current = bundle.provider.awareness.getLocalState()?.user ?? {};
@@ -270,37 +230,37 @@ export function useYjsRoom(
         });
       });
     },
-    [bundle, isAdmin],
+    [bundle, isPresenter],
   );
 
   const setGlobalFollow = useCallback(
     (enabled: boolean) => {
-      if (!bundle || !isAdmin) return;
+      if (!bundle || !isPresenter) return;
       bundle.doc.transact(() => {
         bundle.roomMeta.set('globalFollow', enabled);
       });
     },
-    [bundle, isAdmin],
+    [bundle, isPresenter],
   );
 
   const setUserFollow = useCallback(
     (clientId: number, enabled: boolean) => {
-      if (!bundle || !isAdmin) return;
+      if (!bundle || !isPresenter) return;
       bundle.doc.transact(() => {
         bundle.followMap.set(String(clientId), enabled);
       });
     },
-    [bundle, isAdmin],
+    [bundle, isPresenter],
   );
 
   const clearUserFollow = useCallback(
     (clientId: number) => {
-      if (!bundle || !isAdmin) return;
+      if (!bundle || !isPresenter) return;
       bundle.doc.transact(() => {
         bundle.followMap.delete(String(clientId));
       });
     },
-    [bundle, isAdmin],
+    [bundle, isPresenter],
   );
 
   if (!bundle) return null;
@@ -311,58 +271,21 @@ export function useYjsRoom(
     connected,
     synced,
     localClientId: bundle.provider.awareness.clientID,
-    isAdmin,
+    isPresenter,
+    isAdmin: isPresenter,
     roomMetaState,
     shouldFollow,
     setLocalUser,
     updateCursor,
-    updateAdminViewport,
-    claimAdmin,
+    updatePresenterViewport,
+    updateAdminViewport: updatePresenterViewport,
+    claimPresenter,
+    claimAdmin: claimPresenter,
     setGlobalFollow,
     setUserFollow,
     clearUserFollow,
   };
 }
 
-export function useYMapValues<T>(map: Y.Map<unknown> | null): Map<string, T> {
-  const [, bump] = useState(0);
-
-  useEffect(() => {
-    if (!map) return;
-    const handler = () => bump((n) => n + 1);
-    map.observeDeep(handler);
-    return () => map.unobserveDeep(handler);
-  }, [map]);
-
-  if (!map) return new Map();
-
-  const result = new Map<string, T>();
-  map.forEach((value, key) => {
-    result.set(key, value as T);
-  });
-  return result;
-}
-
-export function useYArrayValues<T>(array: Y.Array<unknown> | null): T[] {
-  const [, bump] = useState(0);
-
-  useEffect(() => {
-    if (!array) return;
-    const handler = () => bump((n) => n + 1);
-    array.observe(handler);
-    return () => array.unobserve(handler);
-  }, [array]);
-
-  if (!array) return [];
-  return array.toArray() as T[];
-}
-
-export function getUserFollowState(
-  clientId: number,
-  meta: RoomMeta,
-  followMap: Y.Map<boolean>,
-): boolean | null {
-  const override = followMap.get(String(clientId));
-  if (override !== undefined) return override;
-  return meta.globalFollow ? true : null;
-}
+/** @deprecated Use `useCollabRoom` */
+export const useYjsRoom = useCollabRoom;

@@ -65,7 +65,8 @@ Then run **Actions → Deploy GitHub Pages → Run workflow**, or push again to 
 ## Project structure
 
 ```
-client/              React frontend
+client/              React frontend demo app
+packages/yjs-room/   Reusable Yjs room + presenter permission library
 server/              Yjs WebSocket server
 .github/workflows/   GitHub Pages CI
 render.yaml          Render deployment config

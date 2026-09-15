@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { Viewport } from './types';
-import { DEFAULT_VIEWPORT } from './types';
+import type { Viewport } from './types.js';
+import { DEFAULT_VIEWPORT } from './types.js';
 
 const MIN_SCALE = 0.4;
 const MAX_SCALE = 2.5;
@@ -13,19 +13,23 @@ function sameViewport(a: Viewport, b: Viewport): boolean {
   return a.x === b.x && a.y === b.y && a.scale === b.scale;
 }
 
-type UseBoardViewportOptions = {
-  isAdmin: boolean;
+export type UseBoardViewportOptions = {
+  isPresenter: boolean;
+  /** @deprecated Use `isPresenter` */
+  isAdmin?: boolean;
   shouldFollow: boolean;
   remoteViewport: Viewport;
   onViewportChange: (viewport: Viewport) => void;
 };
 
 export function useBoardViewport({
+  isPresenter,
   isAdmin,
   shouldFollow,
   remoteViewport,
   onViewportChange,
 }: UseBoardViewportOptions) {
+  const canControl = isPresenter || Boolean(isAdmin);
   const [viewport, setViewport] = useState<Viewport>(DEFAULT_VIEWPORT);
   const viewportRef = useRef(viewport);
   viewportRef.current = viewport;
@@ -34,11 +38,11 @@ export function useBoardViewport({
     (next: Viewport) => {
       viewportRef.current = next;
       setViewport(next);
-      if (isAdmin) {
+      if (canControl) {
         onViewportChange(next);
       }
     },
-    [isAdmin, onViewportChange],
+    [canControl, onViewportChange],
   );
 
   useEffect(() => {
@@ -50,7 +54,7 @@ export function useBoardViewport({
 
   const bindViewportControls = useCallback(
     (element: HTMLElement | null) => {
-      if (!element || !isAdmin) return () => undefined;
+      if (!element || !canControl) return () => undefined;
 
       let panning = false;
       let lastX = 0;
@@ -123,7 +127,7 @@ export function useBoardViewport({
         element.removeEventListener('contextmenu', onContextMenu);
       };
     },
-    [applyViewport, isAdmin],
+    [applyViewport, canControl],
   );
 
   const transformStyle = {

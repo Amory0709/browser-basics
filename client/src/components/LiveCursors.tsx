@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import * as Y from 'yjs';
-import type { AwarenessUser } from '../lib/types';
+import type { AwarenessUser } from '@browser-basics/yjs-room';
 
 type LiveCursorsProps = {
   users: AwarenessUser[];

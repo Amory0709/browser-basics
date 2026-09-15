@@ -1,6 +1,6 @@
 import * as Y from 'yjs';
-import type { AwarenessUser, RoomMeta } from '../lib/types';
-import { getUserFollowState } from '../lib/useYjsRoom';
+import type { AwarenessUser, RoomMeta } from '@browser-basics/yjs-room';
+import { getUserFollowState } from '@browser-basics/yjs-room';
 
 type AdminControlsProps = {
   users: AwarenessUser[];

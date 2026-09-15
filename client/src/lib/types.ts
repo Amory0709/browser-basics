@@ -15,27 +15,7 @@ export const USER_COLORS: UserColor[] = [
   { bg: '#fee2e2', text: '#991b1b', cursor: '#ef4444' },
 ];
 
-export type Viewport = {
-  x: number;
-  y: number;
-  scale: number;
-};
-
-export const DEFAULT_VIEWPORT: Viewport = { x: 0, y: 0, scale: 1 };
-
-export type AwarenessUser = {
-  clientId: number;
-  name: string;
-  color: UserColor;
-  cursor?: { x: number; y: number };
-  viewport?: Viewport;
-};
-
-export type RoomMeta = {
-  adminName: string | null;
-  globalFollow: boolean;
-  adminViewport: Viewport;
-};
+export type { AwarenessUser, RoomMeta, Viewport } from '@browser-basics/yjs-room';
 
 export type StickyNoteData = {
   id: string;
@@ -70,19 +50,6 @@ export function randomName(): string {
 
 export function pickColor(index: number): UserColor {
   return USER_COLORS[index % USER_COLORS.length]!;
-}
-
-export function getWsUrl(): string {
-  const fromEnv = import.meta.env.VITE_WS_URL as string | undefined;
-  if (fromEnv) return fromEnv;
-
-  if (typeof window !== 'undefined') {
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const host = window.location.hostname;
-    return `${protocol}//${host}:1234`;
-  }
-
-  return 'ws://localhost:1234';
 }
 
 export function getShareUrl(room: string): string {
