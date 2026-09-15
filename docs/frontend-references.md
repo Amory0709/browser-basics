@@ -2,7 +2,8 @@
 
 本仓库学习 Web 前端时的重要参考来源。分为**历史权威资料**（理解脉络）和**高频更新来源**（跟踪现状）两类。
 
-> 按时代划分的关键历史节点见 **[frontend-history-eras.md](frontend-history-eras.md)**。
+> 按时代划分的关键历史节点见 **[frontend-eras-summary.md](frontend-eras-summary.md)**（速查）与 **[frontend-history-eras.md](frontend-history-eras.md)**（详解）。  
+> Web 诞生故事见 **[web-birth-story.md](web-birth-story.md)**。
 
 ## 使用建议
 

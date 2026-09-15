@@ -2,7 +2,9 @@
 
 从 Web 诞生到今天的关键节点，按**时代**归纳。边界年份有重叠，时代之间是渐变不是硬切。
 
-> 详细出处见 [frontend-references.md](frontend-references.md) 第一节。
+> 速查表见 [frontend-eras-summary.md](frontend-eras-summary.md)。  
+> 详细出处见 [frontend-references.md](frontend-references.md) 第一节。  
+> Web 诞生故事见 [web-birth-story.md](web-birth-story.md)。
 
 ---
 

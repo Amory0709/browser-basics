@@ -64,7 +64,9 @@ bash scripts/publish-github.sh
 ## 参考资料
 
 - 参考资料：[docs/frontend-references.md](docs/frontend-references.md)
-- 历史时代划分：[docs/frontend-history-eras.md](docs/frontend-history-eras.md)
+- 时代速查：[docs/frontend-eras-summary.md](docs/frontend-eras-summary.md)
+- 时代详解：[docs/frontend-history-eras.md](docs/frontend-history-eras.md)
+- Web 诞生故事：[docs/web-birth-story.md](docs/web-birth-story.md)
 
 ## 项目结构
 
