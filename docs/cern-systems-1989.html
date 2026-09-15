@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>1989 日内瓦 CERN：计算机系统复杂度</title>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --panel: #141e33;
+      --text: #e8edf7;
+      --muted: #9aa8c2;
+      --accent: #5eead4;
+      --ibm: #3b82f6;
+      --vms: #f59e0b;
+      --unix: #22c55e;
+      --mac: #a78bfa;
+      --pc: #94a3b8;
+      --warn: #fb7185;
+      --line: #243049;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: radial-gradient(circle at top, #15213a 0%, var(--bg) 55%);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 2rem 1.25rem 3rem;
+    }
+
+    header {
+      margin-bottom: 2rem;
+    }
+
+    h1 {
+      font-size: clamp(1.6rem, 4vw, 2.4rem);
+      line-height: 1.2;
+      margin: 0 0 0.75rem;
+    }
+
+    .lede {
+      color: var(--muted);
+      max-width: 70ch;
+      margin: 0;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      margin: 1.5rem 0 2rem;
+    }
+
+    .stat {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 1rem;
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 1.6rem;
+      color: var(--accent);
+      margin-bottom: 0.25rem;
+    }
+
+    .stat span {
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    section {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 1.25rem;
+      margin-bottom: 1.25rem;
+    }
+
+    h2 {
+      margin: 0 0 1rem;
+      font-size: 1.15rem;
+    }
+
+    .viz-wrap {
+      overflow-x: auto;
+    }
+
+    svg {
+      display: block;
+      width: 100%;
+      min-width: 720px;
+      height: auto;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem 1.25rem;
+      margin-top: 1rem;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .legend span::before {
+      content: "";
+      display: inline-block;
+      width: 0.75rem;
+      height: 0.75rem;
+      border-radius: 999px;
+      margin-right: 0.4rem;
+      vertical-align: middle;
+    }
+
+    .legend .ibm::before { background: var(--ibm); }
+    .legend .vms::before { background: var(--vms); }
+    .legend .unix::before { background: var(--unix); }
+    .legend .mac::before { background: var(--mac); }
+    .legend .pc::before { background: var(--pc); }
+    .legend .info::before { background: var(--warn); }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.95rem;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 0.65rem 0.5rem;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+    }
+
+    th { color: var(--muted); font-weight: 600; }
+
+    .bar-chart {
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    .bar-row {
+      display: grid;
+      grid-template-columns: 120px 1fr 72px;
+      gap: 0.75rem;
+      align-items: center;
+    }
+
+    .bar-label { font-size: 0.92rem; }
+
+    .bar-track {
+      height: 14px;
+      background: #0f172a;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 999px;
+    }
+
+    .bar-value {
+      text-align: right;
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    .sources {
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    .sources a {
+      color: #93c5fd;
+    }
+
+    .note {
+      border-left: 3px solid var(--accent);
+      padding-left: 0.85rem;
+      color: var(--muted);
+      margin: 0;
+    }
+
+    footer {
+      margin-top: 1.5rem;
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>1989 日内瓦 CERN：计算机系统有多复杂？</h1>
+      <p class="lede">
+        Web 诞生前，CERN 不是「一台大电脑」，而是<strong>多套互不兼容的操作系统</strong>、
+        <strong>多套信息孤岛</strong>、以及<strong>快速增长的网络</strong>叠在一起。
+        下图数据来自 CERN 官方计算机通讯与 1989 年 FATMEN 报告等一手资料。
+      </p>
+    </header>
+
+    <div class="stats-grid" aria-label="关键统计">
+      <div class="stat">
+        <strong>~20 CU</strong>
+        <span>IBM 主机总容量（1 CU ≈ 1 台 IBM 370/168）</span>
+      </div>
+      <div class="stat">
+        <strong>60 GB</strong>
+        <span>IBM VM/CMS 用户磁盘（1987）</span>
+      </div>
+      <div class="stat">
+        <strong>~5 GB</strong>
+        <span>VAX/VMS 用户磁盘（1987）</span>
+      </div>
+      <div class="stat">
+        <strong>4 种 OS</strong>
+        <span>Tim 1989 提案点名：VM/CMS、VMS、Unix、Mac</span>
+      </div>
+    </div>
+
+    <section aria-labelledby="map-title">
+      <h2 id="map-title">系统孤岛示意（非真实网络拓扑，表达「各自为政」）</h2>
+      <div class="viz-wrap">
+        <svg viewBox="0 0 960 520" role="img" aria-labelledby="map-title map-desc">
+          <title id="map-desc">CERN 1989 前后多套计算机与信息系统并存示意图</title>
+          <!-- Geneva lake hint -->
+          <ellipse cx="480" cy="470" rx="300" ry="28" fill="#1d4ed8" opacity="0.15" />
+          <text x="480" y="505" text-anchor="middle" fill="#64748b" font-size="13">日内瓦 · CERN 一带</text>
+
+          <!-- Central problem -->
+          <rect x="360" y="205" width="240" height="88" rx="14" fill="#1e293b" stroke="#5eead4" stroke-width="2" />
+          <text x="480" y="235" text-anchor="middle" fill="#e2e8f0" font-size="15" font-weight="700">信息散落各处</text>
+          <text x="480" y="258" text-anchor="middle" fill="#94a3b8" font-size="12">树状目录 · 不同命令 · 不同协议</text>
+          <text x="480" y="278" text-anchor="middle" fill="#94a3b8" font-size="12">新人找不到 · 人走知识断</text>
+
+          <!-- IBM VM/CMS -->
+          <g>
+            <rect x="40" y="40" width="170" height="110" rx="12" fill="#172554" stroke="#3b82f6" stroke-width="2" />
+            <text x="125" y="68" text-anchor="middle" fill="#bfdbfe" font-weight="700">IBM VM/CMS</text>
+            <text x="125" y="90" text-anchor="middle" fill="#93c5fd" font-size="12">批处理 · 磁带 · 主磁盘</text>
+            <text x="125" y="108" text-anchor="middle" fill="#93c5fd" font-size="12">CERNDOC 文档登记</text>
+            <text x="125" y="126" text-anchor="middle" fill="#64748b" font-size="11">~60 GB 用户盘</text>
+            <line x1="210" y1="95" x2="360" y2="230" stroke="#334155" stroke-width="2" stroke-dasharray="6 4" />
+          </g>
+
+          <!-- VAX/VMS -->
+          <g>
+            <rect x="250" y="40" width="170" height="110" rx="12" fill="#451a03" stroke="#f59e0b" stroke-width="2" />
+            <text x="335" y="68" text-anchor="middle" fill="#fde68a" font-weight="700">VAX / VMS</text>
+            <text x="335" y="90" text-anchor="middle" fill="#fcd34d" font-size="12">交互式开发 · RPC 文档</text>
+            <text x="335" y="108" text-anchor="middle" fill="#fcd34d" font-size="12">VAX/NOTES 讨论</text>
+            <text x="335" y="126" text-anchor="middle" fill="#64748b" font-size="11">~5 GB · 136 终端线</text>
+            <line x1="335" y1="150" x2="420" y2="205" stroke="#334155" stroke-width="2" stroke-dasharray="6 4" />
+          </g>
+
+          <!-- Unix -->
+          <g>
+            <rect x="460" y="40" width="170" height="110" rx="12" fill="#052e16" stroke="#22c55e" stroke-width="2" />
+            <text x="545" y="68" text-anchor="middle" fill="#bbf7d0" font-weight="700">Unix</text>
+            <text x="545" y="90" text-anchor="middle" fill="#86efac" font-size="12">1982 起进入 CERN</text>
+            <text x="545" y="108" text-anchor="middle" fill="#86efac" font-size="12">Usenet / 分析代码</text>
+            <text x="545" y="126" text-anchor="middle" fill="#64748b" font-size="11">1989 渗透率仍偏低</text>
+            <line x1="545" y1="150" x2="480" y2="205" stroke="#334155" stroke-width="2" stroke-dasharray="6 4" />
+          </g>
+
+          <!-- Mac / PC -->
+          <g>
+            <rect x="670" y="40" width="170" height="110" rx="12" fill="#2e1065" stroke="#a78bfa" stroke-width="2" />
+            <text x="755" y="68" text-anchor="middle" fill="#ddd6fe" font-weight="700">Mac / PC</text>
+            <text x="755" y="90" text-anchor="middle" fill="#c4b5fd" font-size="12">个人工作站兴起</text>
+            <text x="755" y="108" text-anchor="middle" fill="#c4b5fd" font-size="12">Apollo · VAXstation</text>
+            <text x="755" y="126" text-anchor="middle" fill="#64748b" font-size="11">1989 RISC 工作站出现</text>
+            <line x1="755" y1="150" x2="540" y2="205" stroke="#334155" stroke-width="2" stroke-dasharray="6 4" />
+          </g>
+
+          <!-- Info silos bottom -->
+          <g>
+            <rect x="70" y="340" width="150" height="72" rx="10" fill="#3f1d2e" stroke="#fb7185" />
+            <text x="145" y="368" text-anchor="middle" fill="#fecdd3" font-size="12">文件系统树</text>
+            <text x="145" y="388" text-anchor="middle" fill="#fda4af" font-size="11">Unix / VMS 目录</text>
+          </g>
+          <g>
+            <rect x="250" y="340" width="150" height="72" rx="10" fill="#3f1d2e" stroke="#fb7185" />
+            <text x="325" y="368" text-anchor="middle" fill="#fecdd3" font-size="12">VMS HELP</text>
+            <text x="325" y="388" text-anchor="middle" fill="#fda4af" font-size="11">命令链式导航</text>
+          </g>
+          <g>
+            <rect x="430" y="340" width="150" height="72" rx="10" fill="#3f1d2e" stroke="#fb7185" />
+            <text x="505" y="368" text-anchor="middle" fill="#fecdd3" font-size="12">UUCP News</text>
+            <text x="505" y="388" text-anchor="middle" fill="#fda4af" font-size="11">树形 newsgroup</text>
+          </g>
+          <g>
+            <rect x="610" y="340" width="150" height="72" rx="10" fill="#3f1d2e" stroke="#fb7185" />
+            <text x="685" y="368" text-anchor="middle" fill="#fecdd3" font-size="12">Enquire</text>
+            <text x="685" y="388" text-anchor="middle" fill="#fda4af" font-size="11">Tim 个人链接网</text>
+          </g>
+
+          <line x1="145" y1="340" x2="430" y2="293" stroke="#475569" stroke-width="1.5" />
+          <line x1="325" y1="340" x2="460" y2="293" stroke="#475569" stroke-width="1.5" />
+          <line x1="505" y1="340" x2="500" y2="293" stroke="#475569" stroke-width="1.5" />
+          <line x1="685" y1="340" x2="560" y2="293" stroke="#475569" stroke-width="1.5" />
+
+          <!-- Web proposal hint -->
+          <rect x="760" y="320" width="170" height="92" rx="12" fill="#134e4a" stroke="#5eead4" stroke-width="2" />
+          <text x="845" y="350" text-anchor="middle" fill="#ccfbf1" font-weight="700">1989 提案</text>
+          <text x="845" y="372" text-anchor="middle" fill="#99f6e4" font-size="12">Gateway + Browser</text>
+          <text x="845" y="392" text-anchor="middle" fill="#99f6e4" font-size="12">统一跳转，不搬库</text>
+          <line x1="760" y1="360" x2="600" y2="260" stroke="#5eead4" stroke-width="2" marker-end="url(#arrow)" />
+          <defs>
+            <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+              <path d="M0,0 L8,4 L0,8 Z" fill="#5eead4" />
+            </marker>
+          </defs>
+        </svg>
+      </div>
+      <div class="legend">
+        <span class="ibm">主机 / 批处理平台</span>
+        <span class="vms">VAX 交互平台</span>
+        <span class="unix">Unix 平台</span>
+        <span class="mac">个人工作站</span>
+        <span class="info">信息孤岛 / 树形系统</span>
+      </div>
+    </section>
+
+    <section aria-labelledby="disk-title">
+      <h2 id="disk-title">容量对比：同一机构，不同「世界」（1987 数据）</h2>
+      <div class="bar-chart" role="list">
+        <div class="bar-row" role="listitem">
+          <div class="bar-label">IBM VM/CMS</div>
+          <div class="bar-track" aria-hidden="true"><div class="bar-fill" style="width:100%;background:var(--ibm)"></div></div>
+          <div class="bar-value">~60 GB</div>
+        </div>
+        <div class="bar-row" role="listitem">
+          <div class="bar-label">VAX/VMS</div>
+          <div class="bar-track" aria-hidden="true"><div class="bar-fill" style="width:8.3%;background:var(--vms)"></div></div>
+          <div class="bar-value">~5 GB</div>
+        </div>
+      </div>
+      <p class="note" style="margin-top:1rem">
+        IBM 仍是批处理、磁带、公共交互服务的主力；VAX 强在交互开发，但磁盘与磁带资源远小于 IBM 体系。
+      </p>
+    </section>
+
+    <section aria-labelledby="table-title">
+      <h2 id="table-title">1989 前后 CERN 计算环境一览</h2>
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">平台</th>
+            <th scope="col">角色</th>
+            <th scope="col">可查数据 / 说明</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>IBM VM/CMS</td>
+            <td>批处理、磁带、主磁盘、公共交互</td>
+            <td>总容量约 20 CU；用户磁盘约 60 GB；CERNDOC 文档系统</td>
+          </tr>
+          <tr>
+            <td>VAX/VMS</td>
+            <td>交互式开发、调试、网络</td>
+            <td>8650 + 8800；用户磁盘约 5 GB；72+64 条 Index 终端线</td>
+          </tr>
+          <tr>
+            <td>Unix</td>
+            <td>分析、News、逐步增长</td>
+            <td>1982 首套 Unix；1989 仍非主导平台</td>
+          </tr>
+          <tr>
+            <td>Mac / Apollo / PC</td>
+            <td>个人与小团队工作站</td>
+            <td>LEP 时代实验区集群；1989 RISC 工作站出现</td>
+          </tr>
+          <tr>
+            <td>Cray / 大型机</td>
+            <td>高能物理批处理</td>
+            <td>与 VM 配合承担 LEP 数据批处理</td>
+          </tr>
+          <tr>
+            <td>FATMEN 支持的变种</td>
+            <td>跨平台文件/磁带访问</td>
+            <td>VM/CMS、MVS、VMS、Apollo、HP/UX、Sun、SGI、RS/6000…「许多不兼容变种」</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section aria-labelledby="why-title">
+      <h2 id="why-title">为什么 Tim 必须做「跨平台」？</h2>
+      <p>
+        1989 年提案写得很直白：必须从 <strong>VM/CMS、Macintosh、VAX/VMS、Unix</strong>
+        访问同一信息；旧系统不能搬空，要用 Gateway 映射；组织真实结构是<strong>网</strong>，存储却是<strong>树</strong>。
+      </p>
+      <p class="note">
+        FATMEN 委员会 1989 年成立，正是因为 LEP 实验数据将爆炸式增长，而物理学者分散在欧美各 institute，
+        计算环境「distributed, and highly heterogeneous」—— 没有统一文档视图，协作成本极高。
+      </p>
+    </section>
+
+    <footer class="sources">
+      <p><strong>数据来源（可查）：</strong></p>
+      <ul>
+        <li>CERN Computer Newsletter 187, Jan–Feb 1987 — IBM/VAX 容量与磁盘对比</li>
+        <li>FATMEN Report / DD/89/15, 1989 — 多平台异构与 LEP 数据规模</li>
+        <li>Tim Berners-Lee, <em>Information Management: A Proposal</em>, March 1989 — 四类 OS 与 Gateway 思路</li>
+        <li>F. Hemmer, <em>CERN Computing Historical Perspective</em> (LEP era slides) — 1988–1989 平台演进</li>
+      </ul>
+      <p>
+        延伸阅读：
+        <a href="web-birth-story.md">web-birth-story.md</a> ·
+        <a href="https://www.w3.org/History/1989/proposal.html">1989 提案原文</a>
+      </p>
+    </footer>
+  </main>
+</body>
+</html>

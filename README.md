@@ -65,6 +65,7 @@ bash scripts/publish-github.sh
 
 - Web 诞生：[docs/web-birth-story.md](docs/web-birth-story.md)
 - 时代总览：[docs/frontend-eras-summary.md](docs/frontend-eras-summary.md)
+- CERN 1989 系统图：[docs/cern-systems-1989.html](docs/cern-systems-1989.html)
 
 ## 项目结构
 
