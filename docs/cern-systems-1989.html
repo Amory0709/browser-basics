@@ -3,20 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>1989 CERN 计算设施 · 地区分布与容量</title>
+  <title>1989 CERN 计算设施 · 3D 地区分布</title>
   <style>
     :root {
       --slb-blue: #0014dc;
       --slb-navy: #003366;
       --bg: #ffffff;
-      --panel: #ffffff;
-      --panel2: #f8fafc;
+      --panel: #f8fafc;
       --text: #0f172a;
       --muted: #64748b;
-      --accent: var(--slb-blue);
       --line: #e2e8f0;
-      --ibm: #0014dc;
-      --vax: #4f7cff;
       --light-blue: #eef4ff;
     }
 
@@ -27,558 +23,632 @@
       font-family: "Segoe UI", system-ui, sans-serif;
       background: var(--bg);
       color: var(--text);
-      line-height: 1.55;
+      line-height: 1.5;
     }
 
-    main {
-      max-width: 1180px;
-      margin: 0 auto;
-      padding: 1.5rem 1rem 3rem;
-    }
+    main { max-width: 1280px; margin: 0 auto; padding: 1.25rem 1rem 2.5rem; }
 
     h1 {
-      font-size: clamp(1.5rem, 4vw, 2.2rem);
-      margin: 0 0 0.5rem;
-      line-height: 1.2;
+      font-size: clamp(1.4rem, 3.5vw, 2rem);
       color: var(--slb-navy);
-      font-weight: 600;
-    }
-
-    h2 {
-      font-size: 1.05rem;
-      margin: 0 0 0.85rem;
-      color: var(--slb-navy);
-      font-weight: 600;
-    }
-
-    .lede {
-      color: var(--muted);
-      max-width: 72ch;
-      margin: 0 0 1.25rem;
-    }
-
-    .note-box {
-      border-left: 3px solid var(--accent);
-      padding: 0.6rem 0.9rem;
-      background: var(--light-blue);
-      color: var(--muted);
-      font-size: 0.92rem;
-      margin-bottom: 1.25rem;
-      border-radius: 0 8px 8px 0;
-    }
-
-    .grid-2 {
-      display: grid;
-      grid-template-columns: 1.2fr 0.8fr;
-      gap: 1rem;
-    }
-
-    @media (max-width: 900px) {
-      .grid-2 { grid-template-columns: 1fr; }
-    }
-
-    section {
-      background: var(--panel);
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 1rem 1.1rem;
-      margin-bottom: 1rem;
-      box-shadow: 0 1px 2px rgba(0, 20, 220, 0.04);
-    }
-
-    .map-wrap {
-      overflow-x: auto;
-      background: var(--panel2);
-      border-radius: 10px;
-      padding: 0.5rem;
-    }
-
-    svg.map { width: 100%; min-width: 680px; height: auto; display: block; }
-
-    .pin { cursor: pointer; transition: transform 0.15s ease; }
-    .pin:hover { transform: scale(1.08); }
-    .pin.active circle { stroke: var(--slb-blue); stroke-width: 3; }
-
-    .detail-panel {
-      min-height: 280px;
-      background: var(--panel2);
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      padding: 0.9rem;
-    }
-
-    .detail-panel h3 {
       margin: 0 0 0.35rem;
-      font-size: 1rem;
-      color: var(--accent);
+      font-weight: 600;
     }
 
-    .detail-panel .meta {
-      color: var(--muted);
-      font-size: 0.85rem;
-      margin-bottom: 0.75rem;
-    }
+    .lede { color: var(--muted); max-width: 70ch; margin: 0 0 1rem; font-size: 0.95rem; }
 
-    .detail-panel ul {
-      margin: 0;
-      padding-left: 1.1rem;
-      font-size: 0.92rem;
-    }
-
-    .detail-panel li { margin-bottom: 0.35rem; }
-
-    .stats {
+    .layout {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 0.75rem;
-      margin-bottom: 1rem;
+      grid-template-columns: 1fr 280px;
+      gap: 1rem;
+      align-items: start;
     }
 
-    .stat {
-      background: var(--panel2);
+    @media (max-width: 960px) {
+      .layout { grid-template-columns: 1fr; }
+    }
+
+    .viz-card {
       border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 0.85rem;
-    }
-
-    .stat strong {
-      display: block;
-      font-size: 1.35rem;
-      color: var(--accent);
-      font-weight: 700;
-    }
-
-    .stat span { color: var(--muted); font-size: 0.85rem; }
-
-    .bars { display: grid; gap: 0.65rem; }
-
-    .bar-row {
-      display: grid;
-      grid-template-columns: 110px 1fr 64px;
-      gap: 0.6rem;
-      align-items: center;
-      font-size: 0.9rem;
-    }
-
-    .track {
-      height: 12px;
-      background: #eef2f7;
-      border-radius: 999px;
+      border-radius: 10px;
       overflow: hidden;
+      background: linear-gradient(180deg, #f0f6ff 0%, #ffffff 100%);
+      box-shadow: 0 2px 12px rgba(0, 20, 220, 0.06);
     }
 
-    .fill { height: 100%; border-radius: 999px; }
-
-    table {
+    #canvas-wrap {
+      position: relative;
       width: 100%;
-      border-collapse: collapse;
-      font-size: 0.88rem;
+      height: min(72vh, 620px);
+      min-height: 420px;
     }
 
-    th, td {
-      text-align: left;
-      padding: 0.55rem 0.45rem;
-      border-bottom: 1px solid var(--line);
-      vertical-align: top;
-    }
+    #canvas-wrap canvas { display: block; width: 100%; height: 100%; }
 
-    th { color: var(--muted); }
-
-    .tag {
-      display: inline-block;
-      padding: 0.1rem 0.45rem;
-      border-radius: 999px;
+    .hint {
+      position: absolute;
+      left: 12px;
+      bottom: 10px;
       font-size: 0.75rem;
-      margin-right: 0.25rem;
+      color: var(--muted);
+      background: rgba(255,255,255,0.88);
+      padding: 0.35rem 0.55rem;
+      border-radius: 6px;
+      border: 1px solid var(--line);
+      pointer-events: none;
     }
 
-    .tag.ch { background: var(--light-blue); color: var(--slb-navy); }
-    .tag.fr { background: #e8f0fe; color: var(--slb-blue); }
-    .tag.ring { background: #f1f5f9; color: var(--muted); border: 1px solid var(--line); }
+    #tooltip {
+      position: absolute;
+      display: none;
+      max-width: 300px;
+      padding: 0.65rem 0.75rem;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-left: 3px solid var(--slb-blue);
+      border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(0, 20, 220, 0.12);
+      font-size: 0.82rem;
+      pointer-events: none;
+      z-index: 10;
+    }
 
-    .refs {
-      font-size: 0.86rem;
+    #tooltip strong { color: var(--slb-navy); display: block; margin-bottom: 0.25rem; }
+    #tooltip .meta { color: var(--muted); font-size: 0.78rem; margin-bottom: 0.35rem; }
+
+    aside {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 0.85rem;
+      background: var(--panel);
+    }
+
+    aside h2 {
+      font-size: 0.95rem;
+      color: var(--slb-navy);
+      margin: 0 0 0.65rem;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      margin-bottom: 0.55rem;
+      font-size: 0.82rem;
+    }
+
+    .legend-item svg { flex-shrink: 0; }
+
+    .legend-item span { color: var(--muted); font-size: 0.75rem; display: block; }
+
+    .side-note {
+      margin-top: 0.85rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid var(--line);
+      font-size: 0.78rem;
       color: var(--muted);
     }
 
-    .refs ol {
-      padding-left: 1.2rem;
-    }
+    section { margin-top: 1rem; border: 1px solid var(--line); border-radius: 10px; padding: 1rem; }
+    section h2 { font-size: 1rem; color: var(--slb-navy); margin: 0 0 0.65rem; }
 
-    .refs li { margin-bottom: 0.55rem; }
+    .refs { font-size: 0.82rem; color: var(--muted); }
+    .refs ol { padding-left: 1.15rem; margin: 0; }
+    .refs li { margin-bottom: 0.4rem; }
     .refs a { color: var(--slb-blue); word-break: break-word; }
 
+    footer { margin-top: 1rem; font-size: 0.82rem; color: var(--muted); }
     footer a { color: var(--slb-blue); }
-
-    footer {
-      margin-top: 1rem;
-      color: var(--muted);
-      font-size: 0.84rem;
-    }
   </style>
 </head>
 <body>
   <main>
-    <header>
-      <h1>1989 前后 CERN 计算设施：地区 · 数量 · 容量</h1>
-      <p class="lede">
-        极简地图展示 Meyrin（瑞士侧）与 Prévessin（法国侧）的关键节点。
-        数据来自 CERN Computer Newsletter、FATMEN 报告、LEP 控制/报警系统论文及 Tim Berners-Lee 一手叙述。
-        <strong>示意图，非精确 GIS。</strong>
-      </p>
-      <p class="note-box">
-        1 CU（CERN Unit）≈ 1 台 IBM 370/168 算力。地图比例与建筑位置为教学示意；精确「网络名 → 物理地址」见 Dimou 1988 报告 [7]。
-      </p>
-    </header>
+    <h1>1989 CERN 计算设施 · 3D 地区分布</h1>
+    <p class="lede">
+      日内瓦–法瑞边境简化地形（2.5D 挤出）。不同机型用不同 3D 图例，高度/尺寸按数量缩放；悬停查看详情。
+      数据见页底引用。拖拽旋转 · 滚轮缩放。
+    </p>
 
-    <div class="stats" aria-label="汇总统计">
-      <div class="stat"><strong>~20 CU</strong><span>IBM 主机总容量 [1]</span></div>
-      <div class="stat"><strong>60 GB</strong><span>VM/CMS 用户磁盘 [1]</span></div>
-      <div class="stat"><strong>~5 GB</strong><span>中央 VAX 用户磁盘 [1]</span></div>
-      <div class="stat"><strong>2 + 集群</strong><span>VXCRNA + VXCRNB [1]</span></div>
-      <div class="stat"><strong>136</strong><span>VAX Index 终端线 [1]</span></div>
-      <div class="stat"><strong>27 km</strong><span>LEP 环 + 8 个 access point [4][5]</span></div>
+    <div class="layout">
+      <div class="viz-card">
+        <div id="canvas-wrap">
+          <div id="tooltip"></div>
+          <div class="hint">拖拽旋转 · 滚轮缩放 · 悬停查看</div>
+        </div>
+      </div>
+
+      <aside aria-label="图例">
+        <h2>计算机图例</h2>
+        <div class="legend-item">
+          <svg width="44" height="36" viewBox="0 0 44 36" aria-hidden="true">
+            <rect x="4" y="8" width="36" height="22" rx="2" fill="#0014dc"/>
+            <rect x="7" y="12" width="30" height="3" fill="#eef4ff"/>
+            <rect x="7" y="17" width="30" height="3" fill="#4f7cff"/>
+            <rect x="7" y="22" width="30" height="3" fill="#eef4ff"/>
+            <rect x="14" y="30" width="16" height="2" fill="#64748b"/>
+          </svg>
+          <div><strong>IBM 主机</strong><span>VM/CMS · CERNVM · ~20 CU</span></div>
+        </div>
+        <div class="legend-item">
+          <svg width="44" height="36" viewBox="0 0 44 36" aria-hidden="true">
+            <rect x="14" y="4" width="16" height="28" rx="1" fill="#003366"/>
+            <rect x="16" y="7" width="12" height="4" fill="#4f7cff"/>
+            <rect x="16" y="14" width="12" height="2" fill="#64748b"/>
+            <rect x="16" y="18" width="12" height="2" fill="#64748b"/>
+            <circle cx="22" cy="26" r="2" fill="#22c55e"/>
+          </svg>
+          <div><strong>VAX 小型机</strong><span>VXCRNA / VXCRNB · ~4.5 CU</span></div>
+        </div>
+        <div class="legend-item">
+          <svg width="44" height="36" viewBox="0 0 44 36" aria-hidden="true">
+            <rect x="8" y="18" width="14" height="10" rx="1" fill="#64748b"/>
+            <rect x="10" y="6" width="18" height="12" rx="1" fill="#94a3b8" stroke="#64748b"/>
+            <rect x="12" y="8" width="14" height="8" fill="#eef4ff"/>
+          </svg>
+          <div><strong>图形工作站</strong><span>Apollo · LEP 控制台</span></div>
+        </div>
+        <div class="legend-item">
+          <svg width="44" height="36" viewBox="0 0 44 36" aria-hidden="true">
+            <rect x="6" y="20" width="8" height="12" fill="#475569"/>
+            <rect x="16" y="14" width="16" height="11" rx="1" fill="#64748b"/>
+            <rect x="18" y="16" width="12" height="7" fill="#eef4ff"/>
+            <rect x="16" y="26" width="16" height="2" fill="#cbd5e1"/>
+          </svg>
+          <div><strong>PC / 终端</strong><span>Index 线 · LEP 前端 PC</span></div>
+        </div>
+        <div class="legend-item">
+          <svg width="44" height="36" viewBox="0 0 44 36" aria-hidden="true">
+            <rect x="12" y="10" width="20" height="20" rx="2" fill="#0f172a"/>
+            <rect x="14" y="12" width="16" height="12" fill="#334155"/>
+            <rect x="18" y="30" width="8" height="2" fill="#64748b"/>
+          </svg>
+          <div><strong>NeXT 工作站</strong><span>Building 31 · WWW 代码</span></div>
+        </div>
+        <div class="legend-item">
+          <svg width="44" height="36" viewBox="0 0 44 36" aria-hidden="true">
+            <rect x="6" y="10" width="32" height="18" rx="2" fill="#4f7cff" opacity="0.35"/>
+            <rect x="10" y="14" width="6" height="6" fill="#0014dc"/>
+            <rect x="19" y="14" width="6" height="6" fill="#0014dc"/>
+            <rect x="28" y="14" width="6" height="6" fill="#0014dc"/>
+          </svg>
+          <div><strong>分布式集群</strong><span>LEP 实验点 · 远端 institute</span></div>
+        </div>
+        <p class="side-note">标记越高 / 越大 ≈ 数量或容量越大（对数缩放）。</p>
+      </aside>
     </div>
 
-    <section aria-labelledby="map-heading">
-      <h2 id="map-heading">极简地区分布图（点击标注查看详情）</h2>
-      <div class="grid-2">
-        <div class="map-wrap">
-          <svg class="map" viewBox="0 0 820 520" role="img" aria-label="CERN Meyrin 与 Prévessin 极简地图">
-            <!-- Lake Geneva -->
-            <path d="M0 430 Q180 390 360 420 T820 400 L820 520 L0 520 Z" fill="#dbeafe" opacity="0.8" />
-            <text x="120" y="470" fill="#64748b" font-size="12">日内瓦湖方向</text>
-
-            <!-- Border -->
-            <line x1="400" y1="30" x2="400" y2="400" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="8 6" />
-            <text x="250" y="24" fill="#003366" font-size="12" text-anchor="middle">瑞士 · Meyrin</text>
-            <text x="560" y="24" fill="#0014dc" font-size="12" text-anchor="middle">法国 · Prévessin</text>
-            <text x="400" y="415" fill="#94a3b8" font-size="11" text-anchor="middle">法瑞边界（示意）</text>
-
-            <!-- LEP ring hint -->
-            <ellipse cx="410" cy="250" rx="300" ry="130" fill="none" stroke="#93c5fd" stroke-width="1.5" stroke-dasharray="5 4" opacity="0.7" />
-            <text x="410" y="118" fill="#64748b" font-size="11" text-anchor="middle">LEP 环 27 km（地下 · 示意）</text>
-            <text x="560" y="250" fill="#64748b" font-size="10">Point 2 · Sergy</text>
-            <text x="250" y="250" fill="#64748b" font-size="10">Point 1 · Meyrin</text>
-
-            <!-- Pins -->
-            <g class="pin" data-id="b513" transform="translate(220,140)">
-              <circle r="14" fill="#0014dc" />
-              <text y="4" text-anchor="middle" fill="#fff" font-size="10" font-weight="700">513</text>
-            </g>
-            <g class="pin" data-id="b31" transform="translate(300,200)">
-              <circle r="12" fill="#003366" />
-              <text y="4" text-anchor="middle" fill="#fff" font-size="9" font-weight="700">31</text>
-            </g>
-            <g class="pin" data-id="scr" transform="translate(180,260)">
-              <circle r="10" fill="#4f7cff" />
-              <text y="3" text-anchor="middle" fill="#fff" font-size="8">SCR</text>
-            </g>
-            <g class="pin" data-id="pcr" transform="translate(580,180)">
-              <circle r="14" fill="#0014dc" />
-              <text y="4" text-anchor="middle" fill="#fff" font-size="9" font-weight="700">PCR</text>
-            </g>
-            <g class="pin" data-id="lep-exp" transform="translate(650,300)">
-              <circle r="11" fill="#003366" />
-              <text y="3" text-anchor="middle" fill="#fff" font-size="8">实验</text>
-            </g>
-            <g class="pin" data-id="remote" transform="translate(500,330)">
-              <circle r="9" fill="#94a3b8" />
-              <text y="3" text-anchor="middle" fill="#fff" font-size="7">远端</text>
-            </g>
-
-            <!-- Distance hint -->
-            <line x1="220" y1="260" x2="580" y2="190" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4 3" />
-            <text x="400" y="175" fill="#64748b" font-size="10" text-anchor="middle">Meyrin ↔ Prévessin ~3 km [5]</text>
-          </svg>
-        </div>
-
-        <div class="detail-panel" id="detail-panel" aria-live="polite">
-          <h3>Building 513 · Computer Centre</h3>
-          <p class="meta"><span class="tag ch">Meyrin · 瑞士侧</span> 1970 建成数据中心 [8]</p>
-          <ul>
-            <li><strong>IBM VM/CMS（CERNVM）</strong>：批处理 + 磁带 + 主磁盘；~60 GB 用户盘 [1]</li>
-            <li><strong>IBM 总容量</strong>：约 20 CU；磁带驱动 32 台（IBM 体系）[1]</li>
-            <li><strong>中央 VAX</strong>：VXCRNA（8650）+ VXCRNB（8800），~5 GB 用户盘 [1]</li>
-            <li><strong>终端</strong>：公共集群 513-R-52 [9]</li>
-            <li><strong>备注</strong>：1991 欧洲 80% 国际 Internet 容量在此楼 [10]（稍晚于本页主时间窗）</li>
-          </ul>
-        </div>
-      </div>
-    </section>
-
-    <section aria-labelledby="cap-heading">
-      <h2 id="cap-heading">容量对比（Computer Centre · 1987 数据）</h2>
-      <div class="bars">
-        <div class="bar-row">
-          <div>IBM 总算力</div>
-          <div class="track"><div class="fill" style="width:100%;background:var(--ibm)"></div></div>
-          <div>~20 CU</div>
-        </div>
-        <div class="bar-row">
-          <div>VAX 集群</div>
-          <div class="track"><div class="fill" style="width:22.5%;background:var(--vax)"></div></div>
-          <div>~4.5 CU</div>
-        </div>
-        <div class="bar-row">
-          <div>VM 用户盘</div>
-          <div class="track"><div class="fill" style="width:100%;background:var(--ibm)"></div></div>
-          <div>60 GB</div>
-        </div>
-        <div class="bar-row">
-          <div>VAX 用户盘</div>
-          <div class="track"><div class="fill" style="width:8.3%;background:var(--vax)"></div></div>
-          <div>5 GB</div>
-        </div>
-        <div class="bar-row">
-          <div>IBM 磁带机</div>
-          <div class="track"><div class="fill" style="width:100%;background:var(--ibm)"></div></div>
-          <div>32 台</div>
-        </div>
-        <div class="bar-row">
-          <div>VAX 磁带机</div>
-          <div class="track"><div class="fill" style="width:12.5%;background:var(--vax)"></div></div>
-          <div>4 台</div>
-        </div>
-      </div>
-    </section>
-
-    <section aria-labelledby="table-heading">
-      <h2 id="table-heading">地区 · 机器 · 数量 · 角色</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>地区 / 建筑</th>
-            <th>主要机器 / 数量</th>
-            <th>容量 / 规模</th>
-            <th>角色</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><span class="tag ch">Meyrin</span> Building 513</td>
-            <td>CERNVM；IBMA/IBMB；VXCRNA；VXCRNB</td>
-            <td>~20 CU IBM；~4.5 CU VAX；60 + 5 GB 磁盘 [1]</td>
-            <td>中央批处理、文档（CERNDOC）、公共交互 [1][2]</td>
-          </tr>
-          <tr>
-            <td><span class="tag ch">Meyrin</span> Building 31</td>
-            <td>Tim 办公室；NeXT（1990 起）</td>
-            <td>—</td>
-            <td>1989 提案；1990 WWW 代码 [11][12]</td>
-          </tr>
-          <tr>
-            <td><span class="tag ch">Meyrin</span> SCR</td>
-            <td>报警系统控制台等</td>
-            <td>50+ 计算机（LEP 报警全网）[5]</td>
-            <td>技术 / 安全控制，距 PCR ~3 km [5]</td>
-          </tr>
-          <tr>
-            <td><span class="tag fr">Prévessin</span> PCR</td>
-            <td>Apollo 3000/3500；PC/AT 前端；Oracle 服务器</td>
-            <td>56 台前端 PC；~30 kB/s 链路 [4]</td>
-            <td>LEP / SPS 加速器控制；1989.7 首束流 [6]</td>
-          </tr>
-          <tr>
-            <td><span class="tag fr">Prévessin</span> Block 4</td>
-            <td>公共终端集群</td>
-            <td>892-SD-003 [9]</td>
-            <td>远程用户接入 CERN 网络</td>
-          </tr>
-          <tr>
-            <td><span class="tag ring">LEP 环</span> 8 access points</td>
-            <td>实验区集群；远端 PC clone</td>
-            <td>4 个地下 LEP 实验 [5]</td>
-            <td>数据采集 / 本地重建；Token Ring 网络 [4]</td>
-          </tr>
-          <tr>
-            <td>欧洲各 institute</td>
-            <td>VM、VMS、Unix、Apollo…</td>
-            <td>FATMEN 支持 10+ OS 变种 [3]</td>
-            <td>分布式协作；「高度异构」[3]</td>
-          </tr>
-        </tbody>
-      </table>
-    </section>
-
     <section aria-labelledby="refs-heading">
-      <h2 id="refs-heading">引用资料（全部）</h2>
+      <h2 id="refs-heading">引用资料</h2>
       <div class="refs">
         <ol>
-          <li>
-            CERN Computer Newsletter <strong>187</strong>, January–February 1987 —
-            IBM/VAX 容量、磁盘（60 GB vs 5 GB）、VXCRNA/VXCRNB、Index 终端线、磁带机数量。
-            <a href="http://cds.cern.ch/record/1292500">http://cds.cern.ch/record/1292500</a>
-          </li>
-          <li>
-            Tim Berners-Lee, <em>Information Management: A Proposal</em>, March 1989 —
-            VM/CMS、VMS、Unix、Mac 四类 OS；CERNDOC、Gateway、异构访问需求。
-            <a href="https://www.w3.org/History/1989/proposal.html">https://www.w3.org/History/1989/proposal.html</a>
-          </li>
-          <li>
-            FATMEN Committee, <em>FATMEN Report</em>, CERN DD/89/15, 1989 —
-            LEP 数据规模；VM/CMS、MVS、VMS、Unix 多平台；「distributed, highly heterogeneous」。
-            <a href="https://cds.cern.ch/record/2296370/files/fatmain.pdf">https://cds.cern.ch/record/2296370/files/fatmain.pdf</a>
-          </li>
-          <li>
-            S. Peters et al., LEP Control System architecture (1989) —
-            PCR Apollo 工作站；56 前端 PC；Token Ring；远端 building PC clone。
-            <a href="https://cds.cern.ch/record/292481/files/sl-95-091.pdf">https://cds.cern.ch/record/292481/files/sl-95-091.pdf</a>
-          </li>
-          <li>
-            LEP Alarm System paper —
-            8 access points；PCR 在 Prévessin，SCR 在 Meyrin（~3 km）；50+ 计算机、5 平台、4 OS。
-            <a href="https://inspirehep.net/files/13cac7b8a3d0eafdeae34610eef64afb">inspirehep.net/files/…/LEP Alarm System</a>
-          </li>
-          <li>
-            CERN Courier, «When LEP saw beam» —
-            1989-07-14 首束流；Prévessin 控制室。
-            <a href="https://cerncourier.com/a/when-lep-cerns-first-big-collider-saw-beam/">cerncourier.com/…/when-lep-saw-beam</a>
-          </li>
-          <li>
-            P. Dimou, <em>Names related to computer networks at CERN</em>, CERN-DD-CS-G48, June 1988 —
-            网络对象名 → 物理地址映射（最全地点索引）。
-            <a href="https://sandbox-cds-rdm.web.cern.ch/records/hzb1n-15x80">sandbox-cds-rdm…/hzb1n-15x80</a>
-          </li>
-          <li>
-            CERN &amp; its Neighbours — Meyrin site；Building 513 数据中心（1970）。
-            <a href="https://voisins.cern/en/meyrin-site-point-1/">voisins.cern/en/meyrin-site-point-1</a>
-          </li>
-          <li>
-            CERN Bulletin — 公共终端集群位置（513-R-52、892-SD-003 等）。
-            <a href="http://cds.cern.ch/record/1726065">http://cds.cern.ch/record/1726065</a>
-          </li>
-          <li>
-            F. Flückiger, «How the internet came to CERN», home.cern —
-            1991 年 Building 513 承载欧洲 80% 国际 Internet 容量；Building 600 RIPE 会议。
-            <a href="https://home.cern/how-internet-came-cern/">https://home.cern/how-internet-came-cern/</a>
-          </li>
-          <li>
-            Tim Berners-Lee, Press FAQ —
-            Building 31 二楼办公室；1989 提案与 1990 NeXT 开发位置。
-            <a href="https://www.w3.org/People/Berners-Lee/FAQ.html">https://www.w3.org/People/Berners-Lee/FAQ.html</a>
-          </li>
-          <li>
-            David Galbraith interview with Tim BL — Building 31 房间 2-010 / 2-012 细节。
-            <a href="https://davidgalbraith.org/uncategorized/the-exact-location-where-the-web-was-invented/2343/">davidgalbraith.org/…/exact-location</a>
-          </li>
-          <li>
-            F. Hemmer, <em>CERN Computing Historical Perspective</em> (LEP era slides) —
-            1988–1989 IBM/VM + VAX/VMS + 工作站 + PC 演进。
-            <a href="https://indico.cern.ch/event/1052077/attachments/2443877/4187384/Hemmer-CERN-AT-Shift-project-20220512.pdf">indico.cern.ch/…/Hemmer-…pdf</a>
-          </li>
-          <li>
-            CERN Courier, «Computing at CERN: the mainframe era» —
-            LEP 时代 IBM/Siemens 主机、VAX 中央服务、Apollo 工作站背景。
-            <a href="https://cerncourier.com/a/computing-at-cern-the-mainframe-era/">cerncourier.com/…/mainframe-era</a>
-          </li>
-          <li>
-            CERN WWW Project History —
-            1991 line-mode browser 在 PRIAM VAX、RS6000、Sun4 等 central machines 发布。
-            <a href="http://info.cern.ch/hypertext/WWW/History.html">http://info.cern.ch/hypertext/WWW/History.html</a>
-          </li>
+          <li>CERN Computer Newsletter 187 (1987) — IBM/VAX 容量、磁盘、终端线。 <a href="http://cds.cern.ch/record/1292500">cds.cern.ch/record/1292500</a></li>
+          <li>Tim Berners-Lee, <em>Information Management: A Proposal</em> (1989). <a href="https://www.w3.org/History/1989/proposal.html">w3.org/History/1989/proposal.html</a></li>
+          <li>FATMEN Report, CERN DD/89/15 (1989). <a href="https://cds.cern.ch/record/2296370/files/fatmain.pdf">fatmain.pdf</a></li>
+          <li>LEP Control System (1989). <a href="https://cds.cern.ch/record/292481/files/sl-95-091.pdf">sl-95-091.pdf</a></li>
+          <li>LEP Alarm System — PCR/SCR 地理分布。 <a href="https://inspirehep.net/files/13cac7b8a3d0eafdeae34610eef64afb">inspirehep.net</a></li>
+          <li>CERN Courier — LEP 首束流 (1989-07-14). <a href="https://cerncourier.com/a/when-lep-cerns-first-big-collider-saw-beam/">cerncourier.com</a></li>
+          <li>P. Dimou, <em>Names related to computer networks at CERN</em> (1988). <a href="https://sandbox-cds-rdm.web.cern.ch/records/hzb1n-15x80">Dimou report</a></li>
+          <li>CERN &amp; its Neighbours — Meyrin / Building 513. <a href="https://voisins.cern/en/meyrin-site-point-1/">voisins.cern</a></li>
+          <li>Tim BL FAQ — Building 31. <a href="https://www.w3.org/People/Berners-Lee/FAQ.html">w3.org FAQ</a></li>
         </ol>
       </div>
     </section>
 
     <footer>
-      相关文档：<a href="web-birth-story.md">web-birth-story.md</a> ·
+      <a href="web-birth-story.md">web-birth-story.md</a> ·
       <a href="frontend-eras-summary.md">frontend-eras-summary.md</a>
-      · 地图为示意，精确坐标请查 [7] Dimou 报告
     </footer>
   </main>
 
-  <script>
-    const SITES = {
-      b513: {
-        title: 'Building 513 · Computer Centre',
-        meta: '<span class="tag ch">Meyrin · 瑞士侧</span> 1970 建成 [8]',
-        items: [
-          '<strong>IBM VM/CMS（CERNVM）</strong>：~60 GB 用户盘；CERNDOC 文档 [1][2]',
-          '<strong>IBM 总算力</strong>：~20 CU；32 台磁带驱动 [1]',
-          '<strong>VXCRNA</strong>：VAX 8650，~1.5 CU，32 MB 内存 [1]',
-          '<strong>VXCRNB</strong>：VAX 8800，~3 CU，双 CPU [1]',
-          '<strong>VAX 用户盘</strong>：~5 GB + 1 GB scratch [1]',
-          '<strong>终端</strong>：72 + 64 条 Index 线；公共集群 513-R-52 [1][9]',
-        ],
-      },
-      b31: {
-        title: 'Building 31 · CN/DN 办公区',
-        meta: '<span class="tag ch">Meyrin</span> 法瑞边界附近 · Tim Berners-Lee [11][12]',
-        items: [
-          '<strong>1989</strong>：2-010 写《Information Management: A Proposal》[11][12]',
-          '<strong>1990.9 起</strong>：2-012 用 NeXT 写 WWW 代码与首个浏览器 [11][12]',
-          '<strong>同层</strong>：Documentation et Données / Computing & Networking HQ',
-          '<strong>容量</strong>：个人工作站级，非中央批处理',
-        ],
-      },
-      scr: {
-        title: 'Meyrin · Technical & Safety Control Room (SCR)',
-        meta: '<span class="tag ch">Meyrin</span> 距 PCR 约 3 km [5]',
-        items: [
-          '<strong>LEP 报警系统</strong>：人员与设备安全通道 [5]',
-          '<strong>规模</strong>：全系统 50+ 计算机，5 种平台，4 种 OS [5]',
-          '<strong>与 PCR 分工</strong>：加速器操作 vs 技术安全 [5]',
-        ],
-      },
-      pcr: {
-        title: 'Prévessin Control Room (PCR)',
-        meta: '<span class="tag fr">Prévessin · 法国侧</span> LEP/SPS 控制 [4][6]',
-        items: [
-          '<strong>1989.7.14</strong>：LEP 首束流在此操作 [6]',
-          '<strong>控制台</strong>：Apollo 3000/3500 工作站（Unix）[4]',
-          '<strong>前端</strong>：56 台 386 PC + VME 机箱 [4]',
-          '<strong>网络</strong>：Token Ring；后与 Swiss 侧 Oracle FDDI 互联 [4]',
-          '<strong>远端</strong>：LEP 各 surface building 的 PC clone (SCO XENIX) [4]',
-        ],
-      },
-      'lep-exp': {
-        title: 'LEP 实验点（环上偶数点 · 地下）',
-        meta: '<span class="tag ring">LEP 环</span> 8 access points [4][5]',
-        items: [
-          '<strong>Point 1</strong>：近 Meyrin 主 site [6]',
-          '<strong>Point 2</strong>：Sergy（法国）[6]',
-          '<strong>4 个 LEP 实验</strong>：ALEPH、DELPHI、L3、OPAL 等分布式集群 [3][13]',
-          '<strong>1988 起</strong>：实验区 workstation cluster 做数据重建 [13]',
-          '<strong>私有集群</strong>：多为 VAX/VMS 分析环境 [13]',
-        ],
-      },
-      remote: {
-        title: '远端 institute & 欧洲协作节点',
-        meta: '非 CERN 本地 · FATMEN 跨平台 [3]',
-        items: [
-          '<strong>平台</strong>：VM/CMS、MVS、VMS、Apollo、HP/UX、Sun、SGI、RS/6000… [3]',
-          '<strong>问题</strong>：「many times as many incompatible variants」[3]',
-          '<strong>统一接口</strong>：FATMEN 让 CERNVM 与 Apollo 控制室用同一套命令取数据 [3]',
-          '<strong>数量</strong>：无全球精确台数统计；物理组分散欧美各所 [3]',
-        ],
-      },
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+    const COLORS = {
+      ch: 0xf1f5f9,
+      fr: 0xeef4ff,
+      lake: 0x93c5fd,
+      border: 0x94a3b8,
+      slb: 0x0014dc,
+      navy: 0x003366,
+      mainframe: 0x0014dc,
+      vax: 0x003366,
+      workstation: 0x64748b,
+      pc: 0x475569,
+      next: 0x0f172a,
+      cluster: 0x4f7cff,
     };
 
-    const panel = document.getElementById('detail-panel');
-    const pins = document.querySelectorAll('.pin');
+    const ORIGIN = { lat: 46.248, lon: 6.055 };
+    const SCALE = 9200;
 
-    function showSite(id) {
-      const site = SITES[id];
-      if (!site) return;
-      pins.forEach((p) => p.classList.toggle('active', p.dataset.id === id));
-      panel.innerHTML =
-        '<h3>' + site.title + '</h3>' +
-        '<p class="meta">' + site.meta + '</p>' +
-        '<ul>' + site.items.map((i) => '<li>' + i + '</li>').join('') + '</ul>';
+    function project(lat, lon) {
+      const x = (lon - ORIGIN.lon) * SCALE * Math.cos(ORIGIN.lat * Math.PI / 180);
+      const z = -(lat - ORIGIN.lat) * SCALE;
+      return new THREE.Vector2(x, z);
     }
 
-    pins.forEach((pin) => {
-      pin.addEventListener('click', () => showSite(pin.dataset.id));
-      pin.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          showSite(pin.dataset.id);
-        }
+    // Simplified Geneva-region outlines (hand-tuned, not survey-grade)
+    const LAKE = [
+      [46.17, 5.99], [46.20, 5.92], [46.28, 5.88], [46.36, 5.92],
+      [46.42, 6.02], [46.44, 6.15], [46.40, 6.28], [46.32, 6.32],
+      [46.22, 6.26], [46.16, 6.12],
+    ].map(([lat, lon]) => project(lat, lon));
+
+    const SWISS = [
+      [46.30, 5.95], [46.34, 5.88], [46.38, 5.90], [46.40, 6.00],
+      [46.38, 6.06], [46.36, 6.04], [46.32, 6.02], [46.28, 6.00],
+      [46.24, 5.98], [46.20, 6.00], [46.18, 6.05], [46.20, 6.10],
+      [46.24, 6.08], [46.28, 6.06],
+    ].map(([lat, lon]) => project(lat, lon));
+
+    const FRANCE = [
+      [46.30, 6.06], [46.34, 6.04], [46.38, 6.06], [46.40, 6.00],
+      [46.44, 6.02], [46.46, 6.10], [46.44, 6.18], [46.38, 6.16],
+      [46.32, 6.12], [46.28, 6.10], [46.24, 6.08], [46.20, 6.10],
+      [46.22, 6.14], [46.26, 6.12], [46.30, 6.10],
+    ].map(([lat, lon]) => project(lat, lon));
+
+    const SITES = [
+      {
+        id: 'b513', name: 'Building 513 · Computer Centre', lat: 46.234, lon: 6.053, country: 'Meyrin · 瑞士侧',
+        items: [
+          { type: 'mainframe', count: 20, label: 'IBM VM/CMS (CERNVM)', detail: '~20 CU 总算力；~60 GB 用户盘；32 台磁带机 [1]' },
+          { type: 'vax', count: 2, label: 'VXCRNA + VXCRNB', detail: '8650 + 8800；~4.5 CU；~5 GB 用户盘 [1]' },
+          { type: 'pc', count: 136, label: 'VAX Index 终端线', detail: '72 + 64 条 Index 线；公共集群 513-R-52 [1][8]' },
+        ],
+      },
+      {
+        id: 'b31', name: 'Building 31 · CN/DN', lat: 46.236, lon: 6.058, country: 'Meyrin · 法瑞边界',
+        items: [
+          { type: 'next', count: 1, label: 'NeXT 工作站', detail: '1989 提案；1990.9 起 WWW 代码与首个浏览器 [2][9]' },
+        ],
+      },
+      {
+        id: 'scr', name: 'Meyrin SCR', lat: 46.228, lon: 6.048, country: 'Meyrin · 技术/安全控制',
+        items: [
+          { type: 'cluster', count: 50, label: 'LEP 报警系统', detail: '50+ 计算机；5 平台 4 OS；距 PCR ~3 km [5]' },
+        ],
+      },
+      {
+        id: 'pcr', name: 'Prévessin Control Room', lat: 46.272, lon: 6.012, country: 'Prévessin · 法国侧',
+        items: [
+          { type: 'workstation', count: 12, label: 'Apollo 3000/3500', detail: 'LEP/SPS 控制台；Unix 图形工作站 [4]' },
+          { type: 'pc', count: 56, label: '386 前端 PC', detail: '56 台 + VME 机箱；1989.7 首束流 [4][6]' },
+        ],
+      },
+      {
+        id: 'prevessin-term', name: 'Prévessin Block 4', lat: 46.268, lon: 6.018, country: 'Prévessin',
+        items: [
+          { type: 'pc', count: 24, label: '公共终端集群', detail: '892-SD-003 远程接入 [8]' },
+        ],
+      },
+      {
+        id: 'lep-p1', name: 'LEP Point 1', lat: 46.230, lon: 6.060, country: '环上 · 近 Meyrin',
+        items: [
+          { type: 'cluster', count: 30, label: 'ALEPH 等实验集群', detail: '地下实验；workstation 数据重建 [3][13]' },
+        ],
+      },
+      {
+        id: 'lep-p2', name: 'LEP Point 2 · Sergy', lat: 46.245, lon: 6.095, country: '环上 · 法国',
+        items: [
+          { type: 'cluster', count: 25, label: 'DELPHI / L3 区域', detail: 'Token Ring；远端 PC clone [4]' },
+        ],
+      },
+      {
+        id: 'remote', name: '欧洲 institute 节点', lat: 46.255, lon: 6.035, country: '分布式 · FATMEN',
+        items: [
+          { type: 'cluster', count: 80, label: '跨所协作节点', detail: 'VM/VMS/Unix/Apollo 等 10+ OS 变种 [3]' },
+        ],
+      },
+    ];
+
+    function scaleForCount(count) {
+      return 0.35 + Math.log10(Math.max(count, 1) + 1) * 0.42;
+    }
+
+    function extrudeShape(points, color, height, y = 0) {
+      const shape = new THREE.Shape();
+      shape.moveTo(points[0].x, points[0].y);
+      for (let i = 1; i < points.length; i++) shape.lineTo(points[i].x, points[i].y);
+      shape.closePath();
+      const geo = new THREE.ExtrudeGeometry(shape, { depth: height, bevelEnabled: false });
+      geo.rotateX(-Math.PI / 2);
+      const mesh = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ color }));
+      mesh.position.y = y;
+      mesh.receiveShadow = true;
+      return mesh;
+    }
+
+    function mat(color, opacity = 1) {
+      return new THREE.MeshStandardMaterial({
+        color,
+        roughness: 0.55,
+        metalness: 0.08,
+        transparent: opacity < 1,
+        opacity,
       });
-      pin.setAttribute('tabindex', '0');
-      pin.setAttribute('role', 'button');
+    }
+
+    function createMainframe(s) {
+      const g = new THREE.Group();
+      const body = new THREE.Mesh(new THREE.BoxGeometry(1.4 * s, 0.9 * s, 0.7 * s), mat(COLORS.mainframe));
+      body.position.y = 0.45 * s;
+      g.add(body);
+      for (let i = 0; i < 3; i++) {
+        const slot = new THREE.Mesh(new THREE.BoxGeometry(1.2 * s, 0.08 * s, 0.02 * s), mat(0xeef4ff));
+        slot.position.set(0, (0.25 + i * 0.18) * s, 0.36 * s);
+        g.add(slot);
+      }
+      return g;
+    }
+
+    function createVax(s) {
+      const g = new THREE.Group();
+      const body = new THREE.Mesh(new THREE.BoxGeometry(0.55 * s, 1.1 * s, 0.55 * s), mat(COLORS.vax));
+      body.position.y = 0.55 * s;
+      g.add(body);
+      const panel = new THREE.Mesh(new THREE.BoxGeometry(0.4 * s, 0.15 * s, 0.02 * s), mat(0x4f7cff));
+      panel.position.set(0, 0.75 * s, 0.28 * s);
+      g.add(panel);
+      return g;
+    }
+
+    function createWorkstation(s) {
+      const g = new THREE.Group();
+      const base = new THREE.Mesh(new THREE.BoxGeometry(0.5 * s, 0.12 * s, 0.45 * s), mat(0x475569));
+      base.position.y = 0.06 * s;
+      g.add(base);
+      const mon = new THREE.Mesh(new THREE.BoxGeometry(0.55 * s, 0.42 * s, 0.08 * s), mat(0x94a3b8));
+      mon.position.set(0, 0.35 * s, 0);
+      g.add(mon);
+      const screen = new THREE.Mesh(new THREE.BoxGeometry(0.45 * s, 0.32 * s, 0.02 * s), mat(0xeef4ff));
+      screen.position.set(0, 0.35 * s, 0.05 * s);
+      g.add(screen);
+      return g;
+    }
+
+    function createPC(s) {
+      const g = new THREE.Group();
+      const tower = new THREE.Mesh(new THREE.BoxGeometry(0.18 * s, 0.35 * s, 0.22 * s), mat(0x475569));
+      tower.position.set(-0.2 * s, 0.175 * s, 0);
+      g.add(tower);
+      const mon = new THREE.Mesh(new THREE.BoxGeometry(0.42 * s, 0.3 * s, 0.06 * s), mat(0x64748b));
+      mon.position.set(0.12 * s, 0.28 * s, 0);
+      g.add(mon);
+      return g;
+    }
+
+    function createNext(s) {
+      const g = new THREE.Group();
+      const cube = new THREE.Mesh(new THREE.BoxGeometry(0.5 * s, 0.5 * s, 0.5 * s), mat(COLORS.next));
+      cube.position.y = 0.25 * s;
+      g.add(cube);
+      const logo = new THREE.Mesh(new THREE.BoxGeometry(0.3 * s, 0.2 * s, 0.02 * s), mat(0x334155));
+      logo.position.set(0, 0.25 * s, 0.26 * s);
+      g.add(logo);
+      return g;
+    }
+
+    function createCluster(s) {
+      const g = new THREE.Group();
+      const m = mat(COLORS.cluster, 0.85);
+      for (let i = 0; i < 3; i++) {
+        for (let j = 0; j < 3; j++) {
+          const box = new THREE.Mesh(new THREE.BoxGeometry(0.22 * s, 0.22 * s, 0.22 * s), m);
+          box.position.set((i - 1) * 0.28 * s, 0.11 * s + j * 0.01, (j - 1) * 0.28 * s);
+          g.add(box);
+        }
+      }
+      return g;
+    }
+
+    function createComputer(type, count) {
+      const s = scaleForCount(count);
+      const factories = {
+        mainframe: createMainframe,
+        vax: createVax,
+        workstation: createWorkstation,
+        pc: createPC,
+        next: createNext,
+        cluster: createCluster,
+      };
+      return factories[type](s);
+    }
+
+    const wrap = document.getElementById('canvas-wrap');
+    const tooltip = document.getElementById('tooltip');
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(wrap.clientWidth, wrap.clientHeight);
+    renderer.shadowMap.enabled = true;
+    wrap.insertBefore(renderer.domElement, tooltip);
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xf8fafc);
+    scene.fog = new THREE.Fog(0xf8fafc, 18, 55);
+
+    const camera = new THREE.PerspectiveCamera(42, wrap.clientWidth / wrap.clientHeight, 0.1, 200);
+    camera.position.set(8, 14, 16);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.target.set(0, 0.5, 0);
+    controls.maxPolarAngle = Math.PI / 2.2;
+    controls.minDistance = 6;
+    controls.maxDistance = 40;
+
+    scene.add(new THREE.AmbientLight(0xffffff, 0.72));
+    const sun = new THREE.DirectionalLight(0xffffff, 0.85);
+    sun.position.set(10, 20, 8);
+    sun.castShadow = true;
+    scene.add(sun);
+    scene.add(new THREE.HemisphereLight(0xeef4ff, 0xf1f5f9, 0.45));
+
+    const terrain = new THREE.Group();
+    terrain.add(extrudeShape(SWISS, COLORS.ch, 0.08, 0));
+    terrain.add(extrudeShape(FRANCE, COLORS.fr, 0.08, 0));
+    const lake = extrudeShape(LAKE, COLORS.lake, 0.03, -0.02);
+    lake.material.transparent = true;
+    lake.material.opacity = 0.75;
+    terrain.add(lake);
+
+    // Border line
+    const borderPts = [
+      project(46.18, 6.05), project(46.22, 6.08), project(46.28, 6.06),
+      project(46.34, 6.04), project(46.38, 6.06), project(46.40, 6.02),
+    ];
+    const borderGeo = new THREE.BufferGeometry().setFromPoints(
+      borderPts.map((p) => new THREE.Vector3(p.x, 0.12, p.y))
+    );
+    const borderLine = new THREE.Line(borderGeo, new THREE.LineDashedMaterial({ color: COLORS.border, dashSize: 0.3, gapSize: 0.15 }));
+    borderLine.computeLineDistances();
+    terrain.add(borderLine);
+
+    // Labels as simple planes
+    function addLabel(text, lat, lon) {
+      const p = project(lat, lon);
+      const canvas = document.createElement('canvas');
+      canvas.width = 256; canvas.height = 64;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = 'rgba(255,255,255,0.92)';
+      ctx.fillRect(0, 0, 256, 64);
+      ctx.fillStyle = '#003366';
+      ctx.font = 'bold 22px Segoe UI, sans-serif';
+      ctx.fillText(text, 12, 38);
+      const tex = new THREE.CanvasTexture(canvas);
+      const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true }));
+      sprite.position.set(p.x, 1.8, p.y);
+      sprite.scale.set(2.8, 0.7, 1);
+      terrain.add(sprite);
+    }
+
+    addLabel('瑞士 Meyrin', 46.238, 6.045);
+    addLabel('法国 Prévessin', 46.278, 6.020);
+    addLabel('日内瓦湖', 46.22, 6.18);
+
+    scene.add(terrain);
+
+    const pickables = [];
+    const markers = new THREE.Group();
+
+    SITES.forEach((site, siteIdx) => {
+      const base = project(site.lat, site.lon);
+      site.items.forEach((item, itemIdx) => {
+        const meshGroup = createComputer(item.type, item.count);
+        const angle = (itemIdx / site.items.length) * Math.PI * 2;
+        const radius = site.items.length > 1 ? 0.55 : 0;
+        meshGroup.position.set(
+          base.x + Math.cos(angle) * radius,
+          0.08,
+          base.y + Math.sin(angle) * radius
+        );
+        const extrudeH = scaleForCount(item.count) * 0.9;
+        meshGroup.position.y = 0.08 + extrudeH * 0.15;
+        meshGroup.scale.multiplyScalar(0.85);
+
+        // Capacity pillar (pudding.cool style extrusion)
+        const pillar = new THREE.Mesh(
+          new THREE.BoxGeometry(0.35, extrudeH, 0.35),
+          mat(COLORS.slb, 0.15)
+        );
+        pillar.position.set(meshGroup.position.x, extrudeH / 2, meshGroup.position.z);
+        markers.add(pillar);
+
+        meshGroup.traverse((o) => {
+          if (o.isMesh) {
+            o.castShadow = true;
+            o.userData = {
+              site: site.name,
+              country: site.country,
+              label: item.label,
+              count: item.count,
+              detail: item.detail,
+              type: item.type,
+            };
+            pickables.push(o);
+          }
+        });
+        markers.add(meshGroup);
+      });
+
+      // Site pin
+      const pin = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.06, 0.06, 0.02, 16),
+        mat(COLORS.slb)
+      );
+      pin.position.set(base.x, 0.09, base.y);
+      markers.add(pin);
     });
+
+    scene.add(markers);
+
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+    let hovered = null;
+
+    function clearHover() {
+      if (hovered && hovered.material && hovered.material.emissive) {
+        hovered.material.emissive.setHex(0x000000);
+        hovered.material.emissiveIntensity = 0;
+      }
+      hovered = null;
+    }
+
+    function onMove(e) {
+      const rect = renderer.domElement.getBoundingClientRect();
+      mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+      raycaster.setFromCamera(mouse, camera);
+      const hits = raycaster.intersectObjects(pickables, false);
+      clearHover();
+      if (hits.length) {
+        const d = hits[0].object.userData;
+        hovered = hits[0].object;
+        document.body.style.cursor = 'pointer';
+        tooltip.style.display = 'block';
+        tooltip.style.left = `${e.clientX - rect.left + 14}px`;
+        tooltip.style.top = `${e.clientY - rect.top + 14}px`;
+        tooltip.innerHTML = `<strong>${d.label}</strong><div class="meta">${d.site} · ${d.country}</div>数量：${d.count}<br>${d.detail}`;
+        if (hovered.material.emissive) {
+          hovered.material.emissive.setHex(0x0014dc);
+          hovered.material.emissiveIntensity = 0.35;
+        }
+      } else {
+        document.body.style.cursor = 'default';
+        tooltip.style.display = 'none';
+      }
+    }
+
+    renderer.domElement.addEventListener('mousemove', onMove);
+    renderer.domElement.addEventListener('mouseleave', () => {
+      tooltip.style.display = 'none';
+      document.body.style.cursor = 'default';
+    });
+
+    function onResize() {
+      const w = wrap.clientWidth;
+      const h = wrap.clientHeight;
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, h);
+    }
+    window.addEventListener('resize', onResize);
+
+    function animate() {
+      requestAnimationFrame(animate);
+      controls.update();
+      renderer.render(scene, camera);
+    }
+    animate();
   </script>
 </body>
 </html>
