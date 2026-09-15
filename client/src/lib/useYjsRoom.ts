@@ -28,21 +28,33 @@ export type YjsRoom = {
   clearUserFollow: (clientId: number) => void;
 };
 
+function readNumber(value: unknown, fallback: number): number {
+  return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
+}
+
 function readViewport(meta: Y.Map<unknown>): Viewport {
   const nested = meta.get('adminViewport');
+  if (nested instanceof Y.Map) {
+    return {
+      x: readNumber(nested.get('x'), 0),
+      y: readNumber(nested.get('y'), 0),
+      scale: readNumber(nested.get('scale'), 1),
+    };
+  }
+
   if (nested && typeof nested === 'object') {
     const record = nested as Partial<Viewport>;
     return {
-      x: typeof record.x === 'number' ? record.x : 0,
-      y: typeof record.y === 'number' ? record.y : 0,
-      scale: typeof record.scale === 'number' ? record.scale : 1,
+      x: readNumber(record.x, 0),
+      y: readNumber(record.y, 0),
+      scale: readNumber(record.scale, 1),
     };
   }
 
   return {
-    x: typeof meta.get('viewportX') === 'number' ? (meta.get('viewportX') as number) : 0,
-    y: typeof meta.get('viewportY') === 'number' ? (meta.get('viewportY') as number) : 0,
-    scale: typeof meta.get('viewportScale') === 'number' ? (meta.get('viewportScale') as number) : 1,
+    x: readNumber(meta.get('viewportX'), 0),
+    y: readNumber(meta.get('viewportY'), 0),
+    scale: readNumber(meta.get('viewportScale'), 1),
   };
 }
 
@@ -162,7 +174,7 @@ export function useYjsRoom(
     provider.on('status', onStatus);
     provider.on('sync', onSync);
     provider.awareness.on('change', refreshAwareness);
-    roomMeta.observe(refreshMeta);
+    roomMeta.observeDeep(refreshMeta);
     followMap.observe(refreshFollow);
 
     refreshMeta();
@@ -173,7 +185,7 @@ export function useYjsRoom(
       provider.off('status', onStatus);
       provider.off('sync', onSync);
       provider.awareness.off('change', refreshAwareness);
-      roomMeta.unobserve(refreshMeta);
+      roomMeta.unobserveDeep(refreshMeta);
       followMap.unobserve(refreshFollow);
       provider.destroy();
       bundle.doc.destroy();
@@ -248,6 +260,9 @@ export function useYjsRoom(
 
         bundle.doc.transact(() => {
           bundle.roomMeta.set('adminViewport', next);
+          bundle.roomMeta.set('viewportX', next.x);
+          bundle.roomMeta.set('viewportY', next.y);
+          bundle.roomMeta.set('viewportScale', next.scale);
         });
 
         const current = bundle.provider.awareness.getLocalState()?.user ?? {};

@@ -54,6 +54,7 @@ function bindViewportCursorTracking(
 
 export function Playground({ room, roomId, userName, userColor, onLeave }: PlaygroundProps) {
   const viewportHostRef = useRef<HTMLDivElement>(null);
+  const boardContentRef = useRef<HTMLDivElement>(null);
   const [drawingActive, setDrawingActive] = useState(false);
 
   const onViewportChange = useCallback(
@@ -114,7 +115,7 @@ export function Playground({ room, roomId, userName, userColor, onLeave }: Playg
       <div className="playground-body">
         <main className="board-area">
           <div ref={viewportHostRef} className={`board-viewport${room.isAdmin ? ' admin-viewport' : ''}`}>
-            <div className="board-content" style={transformStyle}>
+            <div ref={boardContentRef} className="board-content" style={transformStyle}>
               <DrawingCanvas
                 strokes={room.strokes}
                 doc={room.doc}
@@ -131,7 +132,7 @@ export function Playground({ room, roomId, userName, userColor, onLeave }: Playg
               <LiveCursors
                 users={room.awarenessUsers}
                 localClientId={room.localClientId}
-                containerRef={viewportHostRef}
+                containerRef={boardContentRef}
               />
             </div>
           </div>

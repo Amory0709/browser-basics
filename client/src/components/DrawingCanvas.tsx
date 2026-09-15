@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import * as Y from 'yjs';
 import type { DrawStroke } from '../lib/types';
 
@@ -11,13 +11,48 @@ type DrawingCanvasProps = {
   onToggle: () => void;
 };
 
+function readPoints(value: unknown): number[] {
+  if (Array.isArray(value)) {
+    return value.filter((point): point is number => typeof point === 'number');
+  }
+  return [];
+}
+
 function strokeFromMap(map: Y.Map<unknown>): DrawStroke {
   return {
     id: (map.get('id') as string) ?? '',
     color: (map.get('color') as string) ?? '#111827',
     width: (map.get('width') as number) ?? 3,
-    points: (map.get('points') as number[]) ?? [],
+    points: readPoints(map.get('points')),
   };
+}
+
+function drawStrokes(ctx: CanvasRenderingContext2D, data: DrawStroke[]) {
+  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+
+  for (const stroke of data) {
+    if (stroke.points.length < 2) continue;
+
+    ctx.strokeStyle = stroke.color;
+    ctx.fillStyle = stroke.color;
+    ctx.lineWidth = stroke.width;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    if (stroke.points.length === 2) {
+      ctx.beginPath();
+      ctx.arc(stroke.points[0]!, stroke.points[1]!, stroke.width / 2, 0, Math.PI * 2);
+      ctx.fill();
+      continue;
+    }
+
+    ctx.beginPath();
+    ctx.moveTo(stroke.points[0]!, stroke.points[1]!);
+    for (let i = 2; i < stroke.points.length; i += 2) {
+      ctx.lineTo(stroke.points[i]!, stroke.points[i + 1]!);
+    }
+    ctx.stroke();
+  }
 }
 
 export function DrawingCanvas({ strokes, doc, active, onToggle }: DrawingCanvasProps) {
@@ -30,55 +65,55 @@ export function DrawingCanvas({ strokes, doc, active, onToggle }: DrawingCanvasP
 
   useEffect(() => {
     const handler = () => bump((n) => n + 1);
-    strokes.observe(handler);
-    return () => strokes.unobserve(handler);
+    strokes.observeDeep(handler);
+    return () => strokes.unobserveDeep(handler);
   }, [strokes]);
 
   const allStrokes = strokes.toArray().map(strokeFromMap);
 
+  const redraw = useCallback(
+    (data: DrawStroke[]) => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      drawStrokes(ctx, data);
+    },
+    [],
+  );
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
 
     const parent = canvas.parentElement;
     if (!parent) return;
 
     const resize = () => {
       const rect = parent.getBoundingClientRect();
-      canvas.width = rect.width;
-      canvas.height = rect.height;
-      redraw(ctx, allStrokes);
+      canvas.width = Math.max(1, Math.floor(rect.width));
+      canvas.height = Math.max(1, Math.floor(rect.height));
+      redraw(allStrokes);
     };
 
     resize();
     const observer = new ResizeObserver(resize);
     observer.observe(parent);
     return () => observer.disconnect();
-  }, [allStrokes]);
+  }, [allStrokes, redraw]);
 
-  const redraw = (ctx: CanvasRenderingContext2D, data: DrawStroke[]) => {
-    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-    for (const stroke of data) {
-      if (stroke.points.length < 4) continue;
-      ctx.strokeStyle = stroke.color;
-      ctx.lineWidth = stroke.width;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      ctx.beginPath();
-      ctx.moveTo(stroke.points[0]!, stroke.points[1]!);
-      for (let i = 2; i < stroke.points.length; i += 2) {
-        ctx.lineTo(stroke.points[i]!, stroke.points[i + 1]!);
-      }
-      ctx.stroke();
-    }
-  };
+  useEffect(() => {
+    redraw(allStrokes);
+  }, [allStrokes, redraw]);
 
   const getPoint = (event: React.PointerEvent<HTMLCanvasElement>) => {
     const rect = event.currentTarget.getBoundingClientRect();
-    return { x: event.clientX - rect.left, y: event.clientY - rect.top };
+    const scaleX = rect.width > 0 ? event.currentTarget.width / rect.width : 1;
+    const scaleY = rect.height > 0 ? event.currentTarget.height / rect.height : 1;
+    return {
+      x: (event.clientX - rect.left) * scaleX,
+      y: (event.clientY - rect.top) * scaleY,
+    };
   };
 
   const onPointerDown = (event: React.PointerEvent<HTMLCanvasElement>) => {
@@ -102,7 +137,7 @@ export function DrawingCanvas({ strokes, doc, active, onToggle }: DrawingCanvasP
     if (!active || !drawing.current || !currentStroke.current) return;
     const { x, y } = getPoint(event);
     doc.transact(() => {
-      const points = (currentStroke.current!.get('points') as number[]) ?? [];
+      const points = readPoints(currentStroke.current!.get('points'));
       currentStroke.current!.set('points', [...points, x, y]);
     });
   };
