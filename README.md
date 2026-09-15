@@ -63,7 +63,8 @@ bash scripts/publish-github.sh
 
 ## 参考资料
 
-前端历史与行业动态的重要参考来源见 [docs/frontend-references.md](docs/frontend-references.md)。
+- 参考资料：[docs/frontend-references.md](docs/frontend-references.md)
+- 历史时代划分：[docs/frontend-history-eras.md](docs/frontend-history-eras.md)
 
 ## 项目结构
 
