@@ -1,14 +1,23 @@
 import { useState, type FormEvent } from 'react';
-import { getShareUrl, pickColor, randomName } from '../lib/types';
+import { getShareUrl, pickColor } from '../lib/types';
+
+import { getPreferredDisplayName } from '../lib/sessionPrefs';
 
 type LobbyProps = {
   onJoin: (room: string, name: string) => void;
   initialRoom?: string;
+  hostGranted?: boolean;
+  hostRejected?: boolean;
 };
 
-export function Lobby({ onJoin, initialRoom = 'learn-together' }: LobbyProps) {
+export function Lobby({
+  onJoin,
+  initialRoom = 'learn-together',
+  hostGranted = false,
+  hostRejected = false,
+}: LobbyProps) {
   const [room, setRoom] = useState(initialRoom);
-  const [name, setName] = useState(() => randomName());
+  const [name, setName] = useState(() => getPreferredDisplayName());
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
@@ -27,6 +36,19 @@ export function Lobby({ onJoin, initialRoom = 'learn-together' }: LobbyProps) {
           Multiplayer canvas: sticky notes, whiteboard drawing, live cursors, and chat. Share one room
           link and jump in.
         </p>
+
+        {hostGranted && (
+          <p className="presenter-banner" role="status">
+            Presenter session active — you can control the room after joining.
+          </p>
+        )}
+
+        {hostRejected && (
+          <p className="presenter-error" role="alert">
+            Presenter link is invalid or the server is not configured. You can still join as a
+            participant.
+          </p>
+        )}
 
         <form className="lobby-form" onSubmit={handleSubmit}>
           <label>

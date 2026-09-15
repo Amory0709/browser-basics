@@ -197,6 +197,7 @@ export function useYjsRoom(
       const current = bundle.roomMeta.get('adminName') as string | null | undefined;
       const adminOnline = awarenessUsers.some((user) => user.name === current);
 
+      if (!hostGranted) return;
       if (current && current !== name && adminOnline) return;
 
       bundle.doc.transact(() => {

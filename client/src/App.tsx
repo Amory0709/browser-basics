@@ -1,27 +1,30 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Lobby } from './components/Lobby';
 import { Playground } from './components/Playground';
-import { bootstrapHostAccess } from './lib/hostAuth';
+import { bootstrapHostAccess, stripHostKeyFromUrl } from './lib/hostAuth';
+import { getPreferredDisplayName, savePreferredDisplayName } from './lib/sessionPrefs';
 import { pickColor } from './lib/types';
 import { useYjsRoom } from './lib/useYjsRoom';
 
-function getInitialRoom(): string {
-  const params = new URLSearchParams(window.location.search);
-  return params.get('room') ?? 'learn-together';
+function getRoomFromUrl(): string | null {
+  const room = new URLSearchParams(window.location.search).get('room')?.trim();
+  return room || null;
 }
 
 export default function App() {
   const [session, setSession] = useState<{ room: string; name: string } | null>(null);
   const [hostGranted, setHostGranted] = useState(false);
+  const [hostRejected, setHostRejected] = useState(false);
   const [hostReady, setHostReady] = useState(false);
-  const initialRoom = useMemo(() => getInitialRoom(), []);
+  const initialRoom = useMemo(() => getRoomFromUrl() ?? 'learn-together', []);
 
   useEffect(() => {
     let active = true;
 
-    void bootstrapHostAccess().then((granted) => {
+    void bootstrapHostAccess().then((result) => {
       if (!active) return;
-      setHostGranted(granted);
+      setHostGranted(result.granted);
+      setHostRejected(result.rejectedKey);
       setHostReady(true);
     });
 
@@ -39,14 +42,23 @@ export default function App() {
     return pickColor(hash);
   }, [session]);
 
-  const join = (roomId: string, name: string) => {
+  const join = useCallback((roomId: string, name: string) => {
+    savePreferredDisplayName(name);
+    stripHostKeyFromUrl();
     const url = new URL(window.location.href);
     url.searchParams.set('room', roomId);
-    url.searchParams.delete('_hk');
-    url.searchParams.delete('admin');
     window.history.replaceState({}, '', url.toString());
     setSession({ room: roomId, name });
-  };
+  }, []);
+
+  useEffect(() => {
+    if (!hostReady || session) return;
+
+    const roomId = getRoomFromUrl();
+    if (!roomId) return;
+
+    join(roomId, getPreferredDisplayName());
+  }, [hostReady, session, join]);
 
   const leave = () => {
     setSession(null);
@@ -63,7 +75,14 @@ export default function App() {
   }
 
   if (!session || !room) {
-    return <Lobby onJoin={join} initialRoom={initialRoom} />;
+    return (
+      <Lobby
+        onJoin={join}
+        initialRoom={initialRoom}
+        hostGranted={hostGranted}
+        hostRejected={hostRejected}
+      />
+    );
   }
 
   return (

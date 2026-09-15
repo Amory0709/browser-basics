@@ -3,13 +3,18 @@ import { getWsUrl } from './types';
 const HOST_QUERY_PARAM = '_hk';
 const HOST_SESSION_KEY = 'bb-host-v1';
 
+export type HostBootstrapResult = {
+  granted: boolean;
+  rejectedKey: boolean;
+};
+
 function getVerifyUrl(): string {
   const wsUrl = getWsUrl();
   const httpUrl = wsUrl.replace(/^ws:\/\//, 'http://').replace(/^wss:\/\//, 'https://');
   return `${httpUrl}/api/host-verify`;
 }
 
-function stripHostKeyFromUrl(): void {
+export function stripHostKeyFromUrl(): void {
   const url = new URL(window.location.href);
   url.searchParams.delete(HOST_QUERY_PARAM);
   url.searchParams.delete('admin');
@@ -44,10 +49,12 @@ async function verifyHostKey(key: string): Promise<boolean> {
   }
 }
 
-export async function bootstrapHostAccess(): Promise<boolean> {
+export async function bootstrapHostAccess(): Promise<HostBootstrapResult> {
   const fromUrl = captureHostKeyFromUrl();
   const candidate = fromUrl ?? readStoredHostKey();
-  if (!candidate) return false;
+  if (!candidate) {
+    return { granted: false, rejectedKey: false };
+  }
 
   const valid = await verifyHostKey(candidate);
   if (!valid) {
@@ -56,7 +63,7 @@ export async function bootstrapHostAccess(): Promise<boolean> {
     } catch {
       // ignore storage errors
     }
-    return false;
+    return { granted: false, rejectedKey: Boolean(fromUrl) };
   }
 
   try {
@@ -65,11 +72,7 @@ export async function bootstrapHostAccess(): Promise<boolean> {
     // ignore storage errors
   }
 
-  if (fromUrl) {
-    stripHostKeyFromUrl();
-  }
-
-  return true;
+  return { granted: true, rejectedKey: false };
 }
 
 export function clearHostAccess(): void {

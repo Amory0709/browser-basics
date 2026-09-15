@@ -485,12 +485,23 @@ button {
   padding: 0.55rem 0.7rem;
 }
 
-.admin-join-toggle {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+.presenter-banner {
+  margin: 0 0 1rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 12px;
+  background: #ecfdf5;
+  border: 1px solid #86efac;
+  color: #166534;
   font-weight: 600;
-  color: #334155;
+}
+
+.presenter-error {
+  margin: 0 0 1rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 12px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
 }
 
 .admin-badge {
