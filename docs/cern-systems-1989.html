@@ -117,9 +117,7 @@
 
     <div class="layout">
       <div class="viz-card">
-        <svg id="map" viewBox="0 0 720 480" role="img" aria-label="CERN 1989 计算设施分布图">
-          <text x="360" y="240" text-anchor="middle" class="map-status">加载 GeoJSON…</text>
-        </svg>
+        <svg id="map" viewBox="0 0 720 480" role="img" aria-label="CERN 1989 计算设施分布图"></svg>
       </div>
 
       <aside>
@@ -161,6 +159,7 @@
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+  <script src="geo/bundle.js"></script>
   <script>
     const SLB = { blue: '#0014dc', navy: '#003366' };
     const MAP = { w: 720, h: 480, pad: 28 };
@@ -256,21 +255,15 @@
       );
     }
 
-    async function loadGeo(name) {
-      const res = await fetch(`geo/${name}`);
-      if (!res.ok) throw new Error(`${name}: ${res.status}`);
-      return res.json();
-    }
-
-    async function initMap() {
+    function initMap() {
       const svg = d3.select('#map');
       svg.selectAll('*').remove();
 
-      const [ch, fr, lake] = await Promise.all([
-        loadGeo('communes-ch.geojson'),
-        loadGeo('communes-fr.geojson'),
-        loadGeo('lac-leman.geojson'),
-      ]);
+      if (!window.CERN_GEO) {
+        throw new Error('geo/bundle.js 未加载');
+      }
+
+      const { ch, fr, lake } = window.CERN_GEO;
 
       const allFeatures = [
         ...ch.features.map((f) => ({ ...f, country: 'ch' })),
@@ -369,12 +362,13 @@
       });
     }
 
-    initMap().catch((err) => {
+    try {
+      initMap();
+    } catch (err) {
       d3.select('#map').html(
-        `<text x="360" y="240" text-anchor="middle" class="map-status">` +
-        `GeoJSON 加载失败（需 HTTP 服务预览）：${err.message}</text>`
+        `<text x="360" y="240" text-anchor="middle" class="map-status">地图加载失败：${err.message}</text>`
       );
-    });
+    }
   </script>
 </body>
 </html>
