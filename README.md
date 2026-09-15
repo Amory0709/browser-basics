@@ -1,14 +1,14 @@
-# 一起玩 · Yjs 协作白板
+# browser-basics
 
-多人实时协作学习/playground。同一房间链接，大家一起便签、涂鸦、看光标、聊天。
+多人实时协作学习 playground — Yjs 便签、涂鸦、光标、聊天。同一房间链接，一起玩一起学。
+
+在线地址（部署后）：https://mhan8.github.io/browser-basics/
 
 ## 技术栈
 
-- **前端**: React + TypeScript + Vite
+- **前端**: React + TypeScript + Vite → GitHub Pages
 - **同步**: [Yjs](https://yjs.dev) CRDT
-- **传输**: WebSocket (`@y/websocket-server` + `y-websocket`)
-
-选 React 因 Yjs 生态最成熟（provider、awareness、示例多），适合快速做可跑的多人 demo。
+- **WebSocket**: `@y/websocket-server` → [Render](https://render.com) 免费层
 
 ## 功能
 
@@ -31,23 +31,50 @@ npm run dev
 
 开两个浏览器 tab，同房间名即可联调。
 
-## 生产部署
+## 部署架构
 
-1. 构建前端: `npm run build`
-2. 静态托管 `client/dist`
-3. 单独跑 WebSocket 服务: `npm run start -w server`
-4. 设置 `VITE_WS_URL=wss://your-ws-host:1234` 后重新 build
+| 组件 | 平台 | 说明 |
+|------|------|------|
+| 前端静态文件 | GitHub Pages | push 到 `main` 自动构建 |
+| WebSocket 服务 | Render | `render.yaml` 一键部署 |
+
+### 1. 推送到 GitHub
+
+```bash
+export GITHUB_TOKEN=ghp_xxxx   # repo 权限
+bash scripts/publish-github.sh
+```
+
+### 2. 部署 WebSocket（Render）
+
+1. 打开 https://dashboard.render.com
+2. New → Blueprint → 连接 `mhan8/browser-basics` 仓库
+3. Render 会读取根目录 `render.yaml`，创建 `browser-basics-ws` 服务
+4. 记下服务 URL，例如 `wss://browser-basics-ws.onrender.com`
+
+### 3. 配置前端 WebSocket 地址
+
+在 GitHub 仓库 **Settings → Secrets and variables → Actions → Variables** 添加：
+
+- 名称：`VITE_WS_URL`
+- 值：`wss://browser-basics-ws.onrender.com`（换成你的 Render 地址）
+
+然后 **Actions → Deploy GitHub Pages → Run workflow**，或再 push 一次触发 rebuild。
 
 ## 项目结构
 
 ```
-client/   React 前端
-server/   Yjs WebSocket 服务
+client/              React 前端
+server/              Yjs WebSocket 服务
+.github/workflows/   GitHub Pages CI
+render.yaml          Render 部署配置
+scripts/             发布脚本
 ```
 
-## 后续可加
+## 环境变量
 
-- 共享代码编辑器（y-codemirror）
-- 投票/测验 widget
-- 房间密码
-- 持久化（y-leveldb / 数据库 backend）
+| 变量 | 用途 |
+|------|------|
+| `VITE_WS_URL` | 前端 build 时注入 WebSocket 地址 |
+| `GITHUB_PAGES=true` | CI 中设置 Vite base 为 `/browser-basics/` |
+| `PORT` | Render 注入，WebSocket 服务端口 |

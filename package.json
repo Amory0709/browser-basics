@@ -1,5 +1,5 @@
 {
-  "name": "yjs-playground",
+  "name": "browser-basics",
   "private": true,
   "workspaces": [
     "client",
