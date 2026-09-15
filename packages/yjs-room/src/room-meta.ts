@@ -1,5 +1,5 @@
 import * as Y from 'yjs';
-import type { RoomMeta, Viewport } from './types.js';
+import type { RoomMeta, SessionMode, Viewport } from './types.js';
 import { DEFAULT_VIEWPORT } from './types.js';
 
 function readNumber(value: unknown, fallback: number): number {
@@ -32,12 +32,30 @@ export function readViewport(meta: Y.Map<unknown>): Viewport {
   };
 }
 
+function readSessionMode(meta: Y.Map<unknown>): SessionMode {
+  const raw = meta.get('sessionMode');
+  if (raw === 'follow' || raw === 'free') return raw;
+  return meta.get('globalFollow') ? 'follow' : 'free';
+}
+
 export function readRoomMeta(meta: Y.Map<unknown>): RoomMeta {
+  const adminViewport = readViewport(meta);
+  const adminName = (meta.get('adminName') as string | null) ?? null;
+  const sessionMode = readSessionMode(meta);
+
   return {
-    adminName: (meta.get('adminName') as string | null) ?? null,
-    globalFollow: Boolean(meta.get('globalFollow')),
-    adminViewport: readViewport(meta),
+    adminName,
+    presenterName: adminName,
+    sessionMode,
+    globalFollow: sessionMode === 'follow',
+    adminViewport,
+    presenterViewport: adminViewport,
   };
+}
+
+export function writeSessionMode(meta: Y.Map<unknown>, mode: SessionMode): void {
+  meta.set('sessionMode', mode);
+  meta.set('globalFollow', mode === 'follow');
 }
 
 export function shouldUserFollow(

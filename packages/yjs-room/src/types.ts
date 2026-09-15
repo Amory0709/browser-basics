@@ -23,10 +23,17 @@ export type AwarenessUser = {
   viewport?: Viewport;
 };
 
+export type SessionMode = 'follow' | 'free';
+
 export type RoomMeta = {
   adminName: string | null;
+  /** Alias for `adminName` */
+  presenterName: string | null;
+  sessionMode: SessionMode;
   globalFollow: boolean;
   adminViewport: Viewport;
+  /** Alias for `adminViewport` */
+  presenterViewport: Viewport;
 };
 
 export type CollabRoomCollections = {
@@ -67,6 +74,7 @@ export type CollabRoom = {
   /** @deprecated Use `claimPresenter` */
   claimAdmin: (name: string) => void;
   setGlobalFollow: (enabled: boolean) => void;
+  setSessionMode: (mode: SessionMode) => void;
   setUserFollow: (clientId: number, enabled: boolean) => void;
   clearUserFollow: (clientId: number) => void;
 };

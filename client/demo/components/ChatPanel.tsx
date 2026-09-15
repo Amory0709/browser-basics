@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import * as Y from 'yjs';
-import type { ChatMessage, UserColor } from '../lib/types';
+import type { ChatMessage, UserColor } from '../../src/lib/types';
 
 type ChatPanelProps = {
   messages: Y.Array<Y.Map<unknown>>;

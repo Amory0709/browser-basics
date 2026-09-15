@@ -1,13 +1,18 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { bootstrapHostAccess, stripHostKeyFromUrl, useCollabRoom } from '@browser-basics/yjs-room';
+import { Playground } from '../demo/Playground';
+import { Board } from './components/Board';
 import { Lobby } from './components/Lobby';
-import { Playground } from './components/Playground';
 import { getPreferredDisplayName, savePreferredDisplayName } from './lib/sessionPrefs';
 import { pickColor } from './lib/types';
 
 function getRoomFromUrl(): string | null {
   const room = new URLSearchParams(window.location.search).get('room')?.trim();
   return room || null;
+}
+
+function isDemoMode(): boolean {
+  return new URLSearchParams(window.location.search).get('demo') === '1';
 }
 
 export default function App() {
@@ -89,8 +94,10 @@ export default function App() {
     );
   }
 
+  const RoomSurface = isDemoMode() ? Playground : Board;
+
   return (
-    <Playground
+    <RoomSurface
       room={room}
       roomId={session.room}
       userName={session.name}

@@ -7,12 +7,14 @@ import {
   readRoomMeta,
   shouldUserFollow,
   writePresenterViewport,
+  writeSessionMode,
 } from './room-meta.js';
 import type {
   AwarenessUser,
   CollabRoom,
   CollabRoomCollections,
   RoomMeta,
+  SessionMode,
   UserColor,
   Viewport,
 } from './types.js';
@@ -68,8 +70,11 @@ export function useCollabRoom({
   const [synced, setSynced] = useState(false);
   const [roomMetaState, setRoomMetaState] = useState<RoomMeta>({
     adminName: null,
+    presenterName: null,
+    sessionMode: 'free',
     globalFollow: false,
     adminViewport: DEFAULT_VIEWPORT,
+    presenterViewport: DEFAULT_VIEWPORT,
   });
   const [, followBump] = useState(0);
 
@@ -237,7 +242,17 @@ export function useCollabRoom({
     (enabled: boolean) => {
       if (!bundle || !isPresenter) return;
       bundle.doc.transact(() => {
-        bundle.roomMeta.set('globalFollow', enabled);
+        writeSessionMode(bundle.roomMeta, enabled ? 'follow' : 'free');
+      });
+    },
+    [bundle, isPresenter],
+  );
+
+  const setSessionMode = useCallback(
+    (mode: SessionMode) => {
+      if (!bundle || !isPresenter) return;
+      bundle.doc.transact(() => {
+        writeSessionMode(bundle.roomMeta, mode);
       });
     },
     [bundle, isPresenter],
@@ -282,6 +297,7 @@ export function useCollabRoom({
     claimPresenter,
     claimAdmin: claimPresenter,
     setGlobalFollow,
+    setSessionMode,
     setUserFollow,
     clearUserFollow,
   };
