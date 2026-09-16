@@ -116,7 +116,7 @@
     return nodes;
   }
 
-  function layoutAtSites(nodes, projection) {
+  function layoutAtSites(d3, nodes, projection) {
     const siteMeta = new Map(
       sites.map((s) => {
         const [cx, cy] = projection([s.lon, s.lat]);
@@ -207,16 +207,18 @@
 
     if (!window.CERN_GEO) throw new Error('geo/bundle.js 未加载');
 
-    const { ch, fr } = window.CERN_GEO;
-    const allFeatures = [
-      ...ch.features.map((f) => ({ ...f, country: 'ch' })),
-      ...fr.features.map((f) => ({ ...f, country: 'fr' })),
-    ];
-    const geo = { type: 'FeatureCollection', features: allFeatures };
+    const { ch, fr, lake } = window.CERN_GEO;
+    const chFeatures = ch.features.map((f) => ({ ...f, country: 'ch' }));
+    const frFeatures = fr.features.map((f) => ({ ...f, country: 'fr' }));
+    const allFeatures = [...frFeatures, ...chFeatures];
+    const fitGeo = {
+      type: 'FeatureCollection',
+      features: [...allFeatures, ...lake.features],
+    };
 
     const projection = d3.geoMercator().fitExtent(
       [[MAP.pad, MAP.pad], [MAP.w - MAP.pad, MAP.h - MAP.pad]],
-      geo
+      fitGeo
     );
     const path = d3.geoPath(projection);
 
@@ -224,14 +226,44 @@
     const gNodes = svg.append('g').attr('class', 'node-layer');
     const gLabels = svg.append('g').attr('class', 'label-layer');
 
-    gMap.selectAll('path.commune')
+    gMap
+      .append('g')
+      .attr('class', 'lake-layer')
+      .selectAll('path.lake')
+      .data(lake.features)
+      .join('path')
+      .attr('class', 'lake')
+      .attr('d', path);
+
+    gMap
+      .append('g')
+      .attr('class', 'land-layer')
+      .selectAll('path.commune')
       .data(allFeatures)
       .join('path')
       .attr('class', (d) => `commune ${d.country}`)
       .attr('d', path);
 
+    gMap
+      .append('g')
+      .attr('class', 'border-layer')
+      .selectAll('path.commune-outline')
+      .data(allFeatures)
+      .join('path')
+      .attr('class', 'commune-outline')
+      .attr('d', path);
+
+    gMap
+      .append('g')
+      .attr('class', 'border-layer')
+      .selectAll('path.lake-outline')
+      .data(lake.features)
+      .join('path')
+      .attr('class', 'commune-outline')
+      .attr('d', path);
+
     const nodes = expandComputers();
-    layoutAtSites(nodes, projection);
+    layoutAtSites(d3, nodes, projection);
 
     const nodeSel = gNodes
       .selectAll('g.computer-node')

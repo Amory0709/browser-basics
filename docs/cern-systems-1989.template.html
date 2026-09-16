@@ -69,15 +69,29 @@
       background: transparent;
     }
 
-    .commune { stroke: #d6d3d1; stroke-width: 0.5; fill: var(--land); }
-    .commune.ch { fill: var(--land); }
-    .commune.fr { fill: #fafafa; }
+    .commune { stroke: none; vector-effect: non-scaling-stroke; }
+    .commune.ch { fill: #fafaf9; }
+    .commune.fr { fill: #f0f0ef; }
+    .commune-outline {
+      fill: none;
+      stroke: #57534e;
+      stroke-width: 0.85;
+      vector-effect: non-scaling-stroke;
+      pointer-events: none;
+    }
+    .lake {
+      fill: #e8e8e8;
+      stroke: #a3a3a3;
+      stroke-width: 0.75;
+      vector-effect: non-scaling-stroke;
+    }
 
     .site-link { display: none; }
 
     .computer-node {
       cursor: pointer;
       outline: none;
+      opacity: 0.92;
     }
 
     .computer-node:hover .computer-screen,
@@ -235,7 +249,7 @@
         <div id="detail">
           <p class="fn-kicker">提示</p>
           <h3>悬停地图上的电脑</h3>
-          <p class="fn-body">位置来自各 Building / 控制室经纬度，底图为日内瓦州官方 GeoJSON。</p>
+          <p class="fn-body">底图：SITG 市镇边界 + 日内瓦湖轮廓（灰色水域，无蓝底）。</p>
         </div>
         <div class="legend" aria-label="图例">
           <span><i style="border-color:#1d4ed8;background:#dbeafe"></i>IBM</span>

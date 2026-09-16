@@ -10,5 +10,5 @@
 
 - 坐标系：WGS84 (EPSG:4326)
 - 裁剪范围：约 5.96°E–6.22°E，46.16°N–46.32°N
-- 几何简化：`maxAllowableOffset=0.0008`（ArcGIS 服务端）
+- 几何简化：`maxAllowableOffset=0.00015`（ArcGIS 服务端）
 - 许可：© SITG / État de Genève
