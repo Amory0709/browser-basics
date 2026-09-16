@@ -25,7 +25,7 @@
     body {
       margin: 0;
       font-family: "IBM Plex Sans", system-ui, sans-serif;
-      background: var(--paper);
+      background: #fff;
       color: var(--ink);
       line-height: 1.55;
     }
@@ -53,25 +53,22 @@
 
     .stage {
       position: relative;
-      width: min(1180px, 100%);
-      margin: 0 auto 2rem;
-      padding: 0 0.75rem;
+      width: 100%;
+      max-width: 1100px;
+      margin: 0 auto 1.5rem;
+      padding: 0;
     }
 
-    .map-shell {
+    .map-stage {
       position: relative;
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-      box-shadow: 0 24px 60px rgba(28, 25, 23, 0.08);
-      overflow: hidden;
     }
 
     #map {
       display: block;
       width: 100%;
       height: auto;
-      min-height: min(72vh, 640px);
+      min-height: min(75vh, 640px);
+      background: transparent;
     }
 
     .commune { stroke: #d6d3d1; stroke-width: 0.5; }
@@ -79,12 +76,7 @@
     .commune.fr { fill: var(--fr); }
     .lake { fill: var(--lake); fill-opacity: 0.72; stroke: #7dd3fc; stroke-width: 0.6; }
 
-    .site-link {
-      stroke: #cbd5e1;
-      stroke-width: 1;
-      stroke-dasharray: 4 5;
-      opacity: 0.7;
-    }
+    .site-link { display: none; }
 
     .computer-node {
       cursor: pointer;
@@ -112,15 +104,13 @@
 
     .hud {
       position: absolute;
-      top: 1rem;
-      right: 1rem;
-      width: min(280px, calc(100% - 2rem));
-      padding: 1rem 1.1rem;
-      border-radius: 14px;
-      border: 1px solid var(--line);
-      background: var(--panel);
-      backdrop-filter: blur(8px);
-      box-shadow: 0 8px 30px rgba(28, 25, 23, 0.06);
+      top: 0.5rem;
+      right: 0.5rem;
+      width: min(260px, calc(100% - 1rem));
+      padding: 0;
+      border: none;
+      background: transparent;
+      box-shadow: none;
     }
 
     .hud-kicker {
@@ -158,17 +148,24 @@
     }
 
     #detail .fn-body {
-      margin: 0;
+      margin: 0 0 0.35rem;
       font-size: 0.84rem;
+    }
+
+    #detail .fn-coord {
+      margin: 0;
+      font-size: 0.72rem;
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
     }
 
     .legend {
       display: flex;
       flex-wrap: wrap;
       gap: 0.5rem 0.85rem;
-      margin-top: 0.75rem;
-      padding-top: 0.75rem;
-      border-top: 1px solid var(--line);
+      margin-top: 0.65rem;
+      padding-top: 0;
+      border-top: none;
       font-size: 0.72rem;
       color: var(--muted);
     }
@@ -220,31 +217,28 @@
       .hud {
         position: static;
         width: 100%;
-        margin-top: 0.75rem;
-        border-radius: 0 0 14px 14px;
-        border-top: 1px solid var(--line);
+        margin-top: 0.5rem;
+        padding: 0 0.75rem;
       }
-
-      .map-shell { border-radius: 14px; }
     }
   </style>
 </head>
 <body>
   <header class="hero">
     <h1>1989 · CERN 计算设施</h1>
-    <p>日内瓦–法国跨境地图。每个<strong>节点 = 一台计算机</strong>（或 1 CU / 1 终端线），悬停查看 Footnote。</p>
+    <p>每台计算机按<strong>站点 WGS84 坐标</strong>投影到 SITG 市镇地图；同楼多台仅在约百米内微偏移以免重叠。</p>
   </header>
 
   <div class="stage">
-    <div class="map-shell">
+    <div class="map-stage">
       <svg id="map" viewBox="0 0 960 640" role="img" aria-label="CERN 1989 计算设施分布图"></svg>
       <aside class="hud" aria-live="polite">
         <p class="hud-kicker">Footnotes</p>
         <p class="hud-stat" id="stat-total">—</p>
         <div id="detail">
           <p class="fn-kicker">提示</p>
-          <h3>悬停任意电脑节点</h3>
-          <p class="fn-body">力导向布局把同地点的多台机器散开；虚线表示主要控制/数据链路（示意）。</p>
+          <h3>悬停地图上的电脑</h3>
+          <p class="fn-body">位置来自各 Building / 控制室经纬度，底图为日内瓦州官方 GeoJSON。</p>
         </div>
         <div class="legend" aria-label="图例">
           <span><i style="border-color:#1d4ed8;background:#dbeafe"></i>IBM</span>

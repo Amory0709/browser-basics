@@ -1,6 +1,5 @@
 (function () {
-  const MAP = { w: 960, h: 640, pad: 36 };
-  const NODE_R = 7;
+  const MAP = { w: 960, h: 640, pad: 28 };
 
   const TYPE = {
     mainframe: { stroke: '#1d4ed8', fill: '#dbeafe', label: 'IBM 主机' },
@@ -76,15 +75,6 @@
     },
   ];
 
-  const siteLinks = [
-    ['b513', 'b31'],
-    ['b513', 'scr'],
-    ['b513', 'pcr'],
-    ['pcr', 'p1'],
-    ['pcr', 'p2'],
-    ['b513', 'inst'],
-  ];
-
   function showMapError(message) {
     const map = document.getElementById('map');
     if (!map) return;
@@ -92,11 +82,26 @@
       `<text x="${MAP.w / 2}" y="${MAP.h / 2}" text-anchor="middle" class="map-status">${message}</text>`;
   }
 
+  /** 同地点多台机器：在 WGS84 上微小螺旋偏移（米），再投影 */
+  function geoSpiral(i, n, centerLon, centerLat, maxRadiusM) {
+    if (n <= 1) return { lon: centerLon, lat: centerLat };
+    const angle = i * 2.399963;
+    const r = maxRadiusM * Math.sqrt((i + 0.5) / n);
+    const latRad = (centerLat * Math.PI) / 180;
+    const dLat = (r * Math.sin(angle)) / 111320;
+    const dLon = (r * Math.cos(angle)) / (111320 * Math.cos(latRad));
+    return { lon: centerLon + dLon, lat: centerLat + dLat };
+  }
+
   function expandComputers() {
     const nodes = [];
     sites.forEach((site) => {
+      const siteTotal = site.groups.reduce((s, g) => s + g.count, 0);
+      const maxR = Math.min(120, 12 + Math.sqrt(siteTotal) * 4);
+      let idx = 0;
       site.groups.forEach((group) => {
         for (let i = 0; i < group.count; i += 1) {
+          const geo = geoSpiral(idx, siteTotal, site.lon, site.lat, maxR);
           nodes.push({
             id: `${site.id}-${group.type}-${i}`,
             type: group.type,
@@ -105,53 +110,47 @@
             site: site.name,
             region: site.region,
             siteId: site.id,
-            lon: site.lon,
-            lat: site.lat,
+            lon: geo.lon,
+            lat: geo.lat,
           });
+          idx += 1;
         }
       });
     });
     return nodes;
   }
 
-  function spiralOffset(i, n, spread) {
-    if (n <= 1) return { x: 0, y: 0 };
-    const angle = i * 2.399963;
-    const radius = spread * Math.sqrt(i + 1) / Math.sqrt(n);
-    return { x: Math.cos(angle) * radius, y: Math.sin(angle) * radius };
-  }
-
   function drawComputer(g, type) {
     const palette = TYPE[type] || TYPE.pc;
     g.append('rect')
       .attr('class', 'computer-screen')
-      .attr('x', -5.5)
-      .attr('y', -5)
-      .attr('width', 11)
-      .attr('height', 8)
-      .attr('rx', 1.5)
+      .attr('x', -4.5)
+      .attr('y', -4)
+      .attr('width', 9)
+      .attr('height', 6.5)
+      .attr('rx', 1.2)
       .attr('fill', '#fff')
       .attr('stroke', palette.stroke)
-      .attr('stroke-width', 1.1);
+      .attr('stroke-width', 1);
     g.append('rect')
-      .attr('x', -4)
-      .attr('y', -3.5)
-      .attr('width', 8)
-      .attr('height', 5.5)
-      .attr('rx', 0.8)
+      .attr('x', -3.2)
+      .attr('y', -2.8)
+      .attr('width', 6.4)
+      .attr('height', 4.5)
+      .attr('rx', 0.6)
       .attr('fill', palette.fill);
     g.append('rect')
-      .attr('x', -1.2)
-      .attr('y', 3.2)
-      .attr('width', 2.4)
-      .attr('height', 2.2)
+      .attr('x', -1)
+      .attr('y', 2.6)
+      .attr('width', 2)
+      .attr('height', 1.6)
       .attr('fill', palette.stroke);
     g.append('rect')
-      .attr('x', -3.5)
-      .attr('y', 5.2)
-      .attr('width', 7)
-      .attr('height', 1.2)
-      .attr('rx', 0.6)
+      .attr('x', -2.8)
+      .attr('y', 4)
+      .attr('width', 5.6)
+      .attr('height', 0.9)
+      .attr('rx', 0.4)
       .attr('fill', palette.stroke);
   }
 
@@ -177,7 +176,6 @@
     const path = d3.geoPath(projection);
 
     const gMap = svg.append('g').attr('class', 'map-layer');
-    const gLinks = svg.append('g').attr('class', 'link-layer');
     const gNodes = svg.append('g').attr('class', 'node-layer');
     const gLabels = svg.append('g').attr('class', 'label-layer');
 
@@ -193,45 +191,12 @@
       .attr('class', 'lake')
       .attr('d', path);
 
-    const siteAnchors = new Map(
-      sites.map((site) => {
-        const [x, y] = projection([site.lon, site.lat]);
-        return [site.id, { ...site, x, y }];
-      })
-    );
-
     const nodes = expandComputers();
-    const grouped = d3.group(nodes, (d) => d.siteId);
-    grouped.forEach((list, siteId) => {
-      const anchor = siteAnchors.get(siteId);
-      const spread = Math.min(42, 8 + Math.sqrt(list.length) * 3.2);
-      list.forEach((node, i) => {
-        const off = spiralOffset(i, list.length, spread);
-        node.ax = anchor.x + off.x;
-        node.ay = anchor.y + off.y;
-        node.x = node.ax;
-        node.y = node.ay;
-      });
+    nodes.forEach((node) => {
+      const [x, y] = projection([node.lon, node.lat]);
+      node.x = x;
+      node.y = y;
     });
-
-    const links = siteLinks
-      .map(([a, b]) => {
-        const sa = siteAnchors.get(a);
-        const sb = siteAnchors.get(b);
-        if (!sa || !sb) return null;
-        return { source: sa, target: sb };
-      })
-      .filter(Boolean);
-
-    gLinks
-      .selectAll('line.site-link')
-      .data(links)
-      .join('line')
-      .attr('class', 'site-link')
-      .attr('x1', (d) => d.source.x)
-      .attr('y1', (d) => d.source.y)
-      .attr('x2', (d) => d.target.x)
-      .attr('y2', (d) => d.target.y);
 
     const nodeSel = gNodes
       .selectAll('g.computer-node')
@@ -253,26 +218,25 @@
         `<p class="fn-kicker">${d.site}</p>` +
         `<h3>${d.label}</h3>` +
         `<p class="fn-meta">${t.label} · ${d.region}</p>` +
-        `<p class="fn-body">${d.detail}</p>`
+        `<p class="fn-body">${d.detail}</p>` +
+        `<p class="fn-coord">${d.lat.toFixed(5)}°N, ${d.lon.toFixed(5)}°E</p>`
       );
     }
 
-    statTotal.text(`${nodes.length} 台 / 节点`);
+    statTotal.text(`${nodes.length} 台 · WGS84 投影`);
 
     nodeSel
       .on('mouseenter', function (_, d) {
         d3.selectAll('.computer-node').classed('is-active', false);
-        const g = d3.select(this).classed('is-active', true);
-        g.attr('transform', `translate(${d.x},${d.y}) scale(1.12)`);
+        d3.select(this).classed('is-active', true).attr('transform', `translate(${d.x},${d.y}) scale(1.15)`);
         showDetail(d);
       })
       .on('mouseleave', function (_, d) {
-        d3.select(this).classed('is-active', false);
-        d3.select(this).attr('transform', `translate(${d.x},${d.y})`);
+        d3.select(this).classed('is-active', false).attr('transform', `translate(${d.x},${d.y})`);
       })
       .on('focus', function (_, d) {
         d3.selectAll('.computer-node').classed('is-active', false);
-        d3.select(this).classed('is-active', true).attr('transform', `translate(${d.x},${d.y}) scale(1.12)`);
+        d3.select(this).classed('is-active', true).attr('transform', `translate(${d.x},${d.y}) scale(1.15)`);
         showDetail(d);
       })
       .attr('tabindex', 0)
@@ -281,39 +245,17 @@
 
     gLabels
       .selectAll('g.site-label')
-      .data([...siteAnchors.values()])
+      .data(sites)
       .join('g')
       .attr('class', 'site-label')
-      .attr('transform', (d) => `translate(${d.x},${d.y - 52})`)
+      .attr('transform', (d) => {
+        const [x, y] = projection([d.lon, d.lat]);
+        return `translate(${x},${y - 18})`;
+      })
       .each(function (d) {
         const g = d3.select(this);
         g.append('text').attr('class', 'site-name').attr('y', 0).text(d.name.split(' · ')[0]);
-        g.append('text')
-          .attr('class', 'site-count')
-          .attr('y', 14)
-          .text(`${d.groups.reduce((s, gr) => s + gr.count, 0)} 台`);
       });
-
-    const simulation = d3
-      .forceSimulation(nodes)
-      .force(
-        'x',
-        d3
-          .forceX((d) => d.ax)
-          .strength(0.12)
-      )
-      .force(
-        'y',
-        d3
-          .forceY((d) => d.ay)
-          .strength(0.12)
-      )
-      .force('collide', d3.forceCollide(NODE_R + 1.2))
-      .stop();
-
-    for (let i = 0; i < 120; i += 1) simulation.tick();
-
-    nodeSel.attr('transform', (d) => `translate(${d.x},${d.y})`);
   }
 
   function boot(attempts) {
