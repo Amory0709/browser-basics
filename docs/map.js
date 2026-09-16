@@ -1,8 +1,7 @@
 (function () {
   const MAP = { w: 1400, h: 860, pad: 24, stackPadTop: 80 };
 
-  /** Isometric-ish offset so stacks read as depth when the map plane is tilted. */
-  const STACK = { depth: 0.45, minStep: 0.42, maxStep: 3.4, maxRise: 118 };
+  const STACK = { minStep: 0.42, maxStep: 3.4, maxRise: 118 };
 
   const PALETTE = {
     line: '#525252',
