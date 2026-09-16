@@ -34,11 +34,15 @@ cd docs && python3 -m http.server 8080 --bind 0.0.0.0
 
 （部分环境 Simple Browser 对 `file://` 有限制，8080 更稳。）
 
-## 本机 / 公网
+## 本机 / 公网（直接点开即渲染）
 
-- jsDelivr（单文件，无需本地服务）：  
-  https://cdn.jsdelivr.net/gh/Amory0709/browser-basics@cursor/frontend-history-eras-e726/docs/cern-systems-1989.html
-- 不要用 htmlpreview.github.io（外链脚本会丢）。
+**请用 GitHack**（返回 `text/html`）：
+
+https://raw.githack.com/Amory0709/browser-basics/cursor/frontend-history-eras-e726/docs/cern-systems-1989.html
+
+**不要用** `cdn.jsdelivr.net/gh/.../*.html` — jsDelivr 对该路径返回 `text/plain`，浏览器只会显示源码。
+
+**不要用** htmlpreview.github.io（脚本加载顺序有问题）。
 
 ## 改地图后重建单页 HTML
 
