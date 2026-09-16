@@ -16,6 +16,10 @@
 
     * { box-sizing: border-box; }
 
+    html {
+      background: #fff;
+    }
+
     body {
       margin: 0;
       font-family: "IBM Plex Sans", system-ui, sans-serif;
@@ -51,26 +55,29 @@
       width: 100%;
       max-width: 1100px;
       margin: 0 auto 1.5rem;
-      border: none;
-      background: transparent;
-    }
-
-    .map-frame {
-      width: 100%;
-      aspect-ratio: 960 / 640;
-      max-height: 85vh;
+      padding: 0;
+      border: 0;
+      background: none;
+      box-shadow: none;
     }
 
     #map,
-    svg#map {
+    svg#map,
+    .stage svg,
+    .map-stage svg {
       display: block;
       width: 100%;
-      height: 100%;
-      border: 0;
-      outline: none;
-      box-shadow: none;
-      background: transparent;
-      vertical-align: top;
+      height: auto;
+      max-width: 100%;
+      border: 0 !important;
+      outline: 0 !important;
+      box-shadow: none !important;
+      background: none !important;
+      background-color: transparent !important;
+    }
+
+    .basemap path {
+      fill: none !important;
     }
 
     .map-error {
@@ -238,9 +245,7 @@
 
   <div class="stage">
     <div class="map-stage">
-      <div class="map-frame">
-        <svg id="map" viewBox="0 0 960 640" preserveAspectRatio="xMidYMid meet" aria-label="CERN 1989 computing facilities map"></svg>
-      </div>
+      <svg id="map" viewBox="0 0 960 640" preserveAspectRatio="xMidYMid meet" aria-label="CERN 1989 computing facilities map"></svg>
       <aside class="hud" aria-live="polite">
         <p class="hud-kicker">Footnotes</p>
         <p class="hud-stat" id="stat-total">—</p>
@@ -296,9 +301,8 @@ window.CERN_GEO = {"ch":{"type":"FeatureCollection","features":[{"type":"Feature
   const MAP = { w: 960, h: 640, pad: 40 };
 
   const PALETTE = {
-    water: { fill: '#d1d5db', stroke: '#6b7280' },
-    ch: { fill: '#f3f4f6', stroke: '#374151' },
-    fr: { fill: '#e5e7eb', stroke: '#374151' },
+    line: '#525252',
+    lineLight: '#a3a3a3',
   };
 
   const TYPE = {
@@ -446,15 +450,18 @@ window.CERN_GEO = {"ch":{"type":"FeatureCollection","features":[{"type":"Feature
     for (let i = 0; i < 150; i += 1) sim.tick();
   }
 
-  function paintRegion(g, path, features, palette) {
-    g.selectAll('path')
+  function paintBoundaries(g, path, features, stroke, dash) {
+    const sel = g
+      .selectAll('path')
       .data(features)
       .join('path')
       .attr('d', path)
-      .attr('fill', palette.fill)
-      .attr('stroke', palette.stroke)
-      .attr('stroke-width', 0.9)
-      .attr('stroke-linejoin', 'round');
+      .attr('fill', 'none')
+      .attr('stroke', stroke)
+      .attr('stroke-width', 1)
+      .attr('stroke-linejoin', 'round')
+      .attr('stroke-linecap', 'round');
+    if (dash) sel.attr('stroke-dasharray', dash);
   }
 
   function initMap() {
@@ -463,7 +470,12 @@ window.CERN_GEO = {"ch":{"type":"FeatureCollection","features":[{"type":"Feature
 
     const svg = d3.select('#map');
     svg.selectAll('*').remove();
-    svg.attr('viewBox', `0 0 ${MAP.w} ${MAP.h}`);
+    svg
+      .attr('viewBox', `0 0 ${MAP.w} ${MAP.h}`)
+      .attr('fill', 'none')
+      .style('border', 'none')
+      .style('background', 'transparent')
+      .style('outline', 'none');
 
     const { ch, fr, lake } = window.CERN_GEO;
     if (!ch?.features?.length || !fr?.features?.length) {
@@ -484,11 +496,11 @@ window.CERN_GEO = {"ch":{"type":"FeatureCollection","features":[{"type":"Feature
     const path = d3.geoPath(projection);
 
     const gBase = svg.append('g').attr('class', 'basemap');
+    paintBoundaries(gBase.append('g'), path, frF, PALETTE.line);
+    paintBoundaries(gBase.append('g'), path, chF, PALETTE.line);
     if (lake?.features?.length) {
-      paintRegion(gBase.append('g'), path, lake.features, PALETTE.water);
+      paintBoundaries(gBase.append('g'), path, lake.features, PALETTE.lineLight, '5 4');
     }
-    paintRegion(gBase.append('g'), path, frF, PALETTE.fr);
-    paintRegion(gBase.append('g'), path, chF, PALETTE.ch);
 
     gBase
       .append('text')
@@ -547,16 +559,6 @@ window.CERN_GEO = {"ch":{"type":"FeatureCollection","features":[{"type":"Feature
           .attr('class', 'site-count')
           .text(`${total}`);
       });
-
-    svg.append('g').attr('class', 'basemap-top').attr('pointer-events', 'none')
-      .selectAll('path')
-      .data([...frF, ...chF])
-      .join('path')
-      .attr('d', path)
-      .attr('fill', 'none')
-      .attr('stroke', '#1f2937')
-      .attr('stroke-width', 0.55)
-      .attr('stroke-linejoin', 'round');
 
     const detail = d3.select('#detail');
     d3.select('#stat-total').text(`${nodes.length} machines · ${sites.length} sites`);

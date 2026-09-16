@@ -2,9 +2,8 @@
   const MAP = { w: 960, h: 640, pad: 40 };
 
   const PALETTE = {
-    water: { fill: '#d1d5db', stroke: '#6b7280' },
-    ch: { fill: '#f3f4f6', stroke: '#374151' },
-    fr: { fill: '#e5e7eb', stroke: '#374151' },
+    line: '#525252',
+    lineLight: '#a3a3a3',
   };
 
   const TYPE = {
@@ -152,15 +151,18 @@
     for (let i = 0; i < 150; i += 1) sim.tick();
   }
 
-  function paintRegion(g, path, features, palette) {
-    g.selectAll('path')
+  function paintBoundaries(g, path, features, stroke, dash) {
+    const sel = g
+      .selectAll('path')
       .data(features)
       .join('path')
       .attr('d', path)
-      .attr('fill', palette.fill)
-      .attr('stroke', palette.stroke)
-      .attr('stroke-width', 0.9)
-      .attr('stroke-linejoin', 'round');
+      .attr('fill', 'none')
+      .attr('stroke', stroke)
+      .attr('stroke-width', 1)
+      .attr('stroke-linejoin', 'round')
+      .attr('stroke-linecap', 'round');
+    if (dash) sel.attr('stroke-dasharray', dash);
   }
 
   function initMap() {
@@ -169,7 +171,12 @@
 
     const svg = d3.select('#map');
     svg.selectAll('*').remove();
-    svg.attr('viewBox', `0 0 ${MAP.w} ${MAP.h}`);
+    svg
+      .attr('viewBox', `0 0 ${MAP.w} ${MAP.h}`)
+      .attr('fill', 'none')
+      .style('border', 'none')
+      .style('background', 'transparent')
+      .style('outline', 'none');
 
     const { ch, fr, lake } = window.CERN_GEO;
     if (!ch?.features?.length || !fr?.features?.length) {
@@ -190,11 +197,11 @@
     const path = d3.geoPath(projection);
 
     const gBase = svg.append('g').attr('class', 'basemap');
+    paintBoundaries(gBase.append('g'), path, frF, PALETTE.line);
+    paintBoundaries(gBase.append('g'), path, chF, PALETTE.line);
     if (lake?.features?.length) {
-      paintRegion(gBase.append('g'), path, lake.features, PALETTE.water);
+      paintBoundaries(gBase.append('g'), path, lake.features, PALETTE.lineLight, '5 4');
     }
-    paintRegion(gBase.append('g'), path, frF, PALETTE.fr);
-    paintRegion(gBase.append('g'), path, chF, PALETTE.ch);
 
     gBase
       .append('text')
@@ -253,16 +260,6 @@
           .attr('class', 'site-count')
           .text(`${total}`);
       });
-
-    svg.append('g').attr('class', 'basemap-top').attr('pointer-events', 'none')
-      .selectAll('path')
-      .data([...frF, ...chF])
-      .join('path')
-      .attr('d', path)
-      .attr('fill', 'none')
-      .attr('stroke', '#1f2937')
-      .attr('stroke-width', 0.55)
-      .attr('stroke-linejoin', 'round');
 
     const detail = d3.select('#detail');
     d3.select('#stat-total').text(`${nodes.length} machines · ${sites.length} sites`);
