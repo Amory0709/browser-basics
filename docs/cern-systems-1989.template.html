@@ -4,162 +4,279 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>1989 CERN 计算设施 · 地区分布</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --slb-blue: #0014dc;
-      --slb-navy: #003366;
-      --bg: #ffffff;
-      --panel: #f8fafc;
-      --text: #0f172a;
-      --muted: #64748b;
-      --line: #e2e8f0;
-      --light-blue: #eef4ff;
+      --ink: #1c1917;
+      --muted: #78716c;
+      --paper: #fafaf9;
+      --panel: rgba(255, 255, 255, 0.92);
+      --line: #e7e5e4;
+      --lake: #bae6fd;
+      --ch: #f5f5f4;
+      --fr: #fafafa;
+      --accent: #0014dc;
     }
 
     * { box-sizing: border-box; }
 
     body {
       margin: 0;
-      font-family: "Segoe UI", system-ui, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.5;
+      font-family: "IBM Plex Sans", system-ui, sans-serif;
+      background: var(--paper);
+      color: var(--ink);
+      line-height: 1.55;
     }
 
-    main { max-width: 1100px; margin: 0 auto; padding: 1.25rem 1rem 2.5rem; }
-
-    h1 { font-size: clamp(1.35rem, 3vw, 1.85rem); color: var(--slb-navy); margin: 0 0 0.35rem; }
-    .lede { color: var(--muted); max-width: 68ch; margin: 0 0 1rem; font-size: 0.94rem; }
-
-    .layout {
-      display: grid;
-      grid-template-columns: 1fr 240px;
-      gap: 1rem;
+    .hero {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 2.5rem 1.25rem 1rem;
+      text-align: center;
     }
 
-    @media (max-width: 860px) { .layout { grid-template-columns: 1fr; } }
+    .hero h1 {
+      font-family: Fraunces, Georgia, serif;
+      font-size: clamp(1.75rem, 4vw, 2.35rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin: 0 0 0.75rem;
+    }
 
-    .viz-card {
+    .hero p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 1rem;
+    }
+
+    .stage {
+      position: relative;
+      width: min(1180px, 100%);
+      margin: 0 auto 2rem;
+      padding: 0 0.75rem;
+    }
+
+    .map-shell {
+      position: relative;
       border: 1px solid var(--line);
-      border-radius: 10px;
-      background: linear-gradient(180deg, #f8fbff 0%, #fff 100%);
-      padding: 0.75rem;
+      border-radius: 18px;
+      background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+      box-shadow: 0 24px 60px rgba(28, 25, 23, 0.08);
+      overflow: hidden;
     }
 
-    #map { width: 100%; height: auto; display: block; }
+    #map {
+      display: block;
+      width: 100%;
+      height: auto;
+      min-height: min(72vh, 640px);
+    }
 
-    .region-label { font-size: 11px; fill: var(--slb-navy); font-weight: 600; pointer-events: none; }
-    .region-sub { font-size: 9px; fill: var(--muted); pointer-events: none; }
+    .commune { stroke: #d6d3d1; stroke-width: 0.5; }
+    .commune.ch { fill: var(--ch); }
+    .commune.fr { fill: var(--fr); }
+    .lake { fill: var(--lake); fill-opacity: 0.72; stroke: #7dd3fc; stroke-width: 0.6; }
 
-    .commune { stroke: #cbd5e1; stroke-width: 0.6; }
-    .commune.ch { fill: #f1f5f9; }
-    .commune.fr { fill: #eef4ff; }
-    .lake { fill: #93c5fd; fill-opacity: 0.55; stroke: #60a5fa; stroke-width: 0.8; pointer-events: none; }
+    .site-link {
+      stroke: #cbd5e1;
+      stroke-width: 1;
+      stroke-dasharray: 4 5;
+      opacity: 0.7;
+    }
 
-    .marker { cursor: pointer; }
-    .marker:hover { opacity: 0.85; }
-    .marker.active { filter: drop-shadow(0 0 4px rgba(0, 20, 220, 0.5)); }
+    .computer-node {
+      cursor: pointer;
+      outline: none;
+    }
+
+    .computer-node:hover .computer-screen,
+    .computer-node.is-active .computer-screen {
+      stroke-width: 1.6;
+    }
+
+    .computer-node:focus-visible .computer-screen {
+      stroke: var(--accent);
+      stroke-width: 2;
+    }
+
+    .site-label { pointer-events: none; text-anchor: middle; }
+    .site-name { font-size: 11px; fill: #44403c; font-weight: 600; }
+    .site-count { font-size: 9px; fill: #a8a29e; }
 
     .map-status {
-      font-size: 0.82rem;
-      color: var(--muted);
-      text-align: center;
-      padding: 2rem 1rem;
+      font-size: 14px;
+      fill: var(--muted);
     }
 
-    aside {
+    .hud {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      width: min(280px, calc(100% - 2rem));
+      padding: 1rem 1.1rem;
+      border-radius: 14px;
       border: 1px solid var(--line);
-      border-radius: 10px;
-      padding: 0.85rem;
       background: var(--panel);
+      backdrop-filter: blur(8px);
+      box-shadow: 0 8px 30px rgba(28, 25, 23, 0.06);
+    }
+
+    .hud-kicker {
+      margin: 0 0 0.35rem;
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .hud-stat {
+      margin: 0 0 0.75rem;
+      font-size: 0.85rem;
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    #detail .fn-kicker {
+      margin: 0 0 0.25rem;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    #detail h3 {
+      margin: 0 0 0.35rem;
+      font-family: Fraunces, Georgia, serif;
+      font-size: 1.05rem;
+      font-weight: 600;
+    }
+
+    #detail .fn-meta {
+      margin: 0 0 0.5rem;
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    #detail .fn-body {
+      margin: 0;
       font-size: 0.84rem;
     }
 
-    aside h2 { font-size: 0.92rem; color: var(--slb-navy); margin: 0 0 0.6rem; }
-
-    .legend-row {
+    .legend {
       display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      margin-bottom: 0.45rem;
-      color: var(--muted);
-    }
-
-    .legend-row strong { color: var(--text); font-size: 0.82rem; }
-
-    #detail {
+      flex-wrap: wrap;
+      gap: 0.5rem 0.85rem;
       margin-top: 0.75rem;
       padding-top: 0.75rem;
       border-top: 1px solid var(--line);
-      min-height: 120px;
+      font-size: 0.72rem;
+      color: var(--muted);
     }
 
-    #detail h3 { margin: 0 0 0.25rem; font-size: 0.9rem; color: var(--slb-blue); }
-    #detail .meta { color: var(--muted); font-size: 0.78rem; margin-bottom: 0.4rem; }
-    #detail p { margin: 0; font-size: 0.82rem; color: var(--text); }
+    .legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
 
-    section { margin-top: 1rem; border: 1px solid var(--line); border-radius: 10px; padding: 1rem; }
-    section h2 { font-size: 0.95rem; color: var(--slb-navy); margin: 0 0 0.5rem; }
+    .legend i {
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+      border: 1px solid currentColor;
+      display: inline-block;
+    }
 
-    .refs { font-size: 0.8rem; color: var(--muted); }
+    .refs-wrap {
+      max-width: 720px;
+      margin: 0 auto 2.5rem;
+      padding: 0 1.25rem;
+    }
+
+    .refs-wrap h2 {
+      font-family: Fraunces, Georgia, serif;
+      font-size: 1.1rem;
+      margin: 0 0 0.75rem;
+    }
+
+    .refs {
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
     .refs ol { margin: 0; padding-left: 1.1rem; }
-    .refs a { color: var(--slb-blue); word-break: break-word; }
-    footer { margin-top: 1rem; font-size: 0.82rem; color: var(--muted); }
-    footer a { color: var(--slb-blue); }
+    .refs a { color: var(--accent); }
+
+    footer {
+      text-align: center;
+      padding: 0 1rem 2rem;
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    footer a { color: var(--accent); }
+
+    @media (max-width: 720px) {
+      .hud {
+        position: static;
+        width: 100%;
+        margin-top: 0.75rem;
+        border-radius: 0 0 14px 14px;
+        border-top: 1px solid var(--line);
+      }
+
+      .map-shell { border-radius: 14px; }
+    }
   </style>
 </head>
 <body>
-  <main>
-    <h1>1989 CERN 计算设施 · 地区分布</h1>
-    <p class="lede">
-      D3 地图：SITG 官方 GeoJSON 市镇边界 + 日内瓦湖。每个地点按<strong>实际经纬度</strong>定位，按<strong>实际数量</strong>摆放机型小图标。
-      在线预览请直接打开
-      <a href="https://cdn.jsdelivr.net/gh/Amory0709/browser-basics@cursor/frontend-history-eras-e726/docs/cern-systems-1989.html">jsDelivr 单页链接</a>（勿用 htmlpreview）。
-    </p>
+  <header class="hero">
+    <h1>1989 · CERN 计算设施</h1>
+    <p>日内瓦–法国跨境地图。每个<strong>节点 = 一台计算机</strong>（或 1 CU / 1 终端线），悬停查看 Footnote。</p>
+  </header>
 
-    <div class="layout">
-      <div class="viz-card">
-        <svg id="map" viewBox="0 0 720 480" role="img" aria-label="CERN 1989 计算设施分布图"></svg>
-      </div>
-
-      <aside>
-        <h2>图例</h2>
-        <div class="legend-row"><svg width="28" height="22"><rect x="2" y="4" width="24" height="14" rx="1" fill="#0014dc"/><rect x="4" y="7" width="20" height="2" fill="#eef4ff"/></svg><strong>IBM 主机</strong></div>
-        <div class="legend-row"><svg width="28" height="22"><rect x="9" y="2" width="10" height="18" rx="1" fill="#003366"/></svg><strong>VAX</strong></div>
-        <div class="legend-row"><svg width="28" height="22"><rect x="4" y="10" width="10" height="8" fill="#64748b"/><rect x="14" y="4" width="10" height="8" rx="1" fill="#94a3b8"/></svg><strong>工作站</strong></div>
-        <div class="legend-row"><svg width="28" height="22"><rect x="4" y="10" width="6" height="8" fill="#475569"/><rect x="12" y="6" width="12" height="8" fill="#64748b"/></svg><strong>PC / 终端</strong></div>
-        <div class="legend-row"><svg width="28" height="22"><rect x="7" y="5" width="14" height="14" fill="#0f172a"/></svg><strong>NeXT</strong></div>
+  <div class="stage">
+    <div class="map-shell">
+      <svg id="map" viewBox="0 0 960 640" role="img" aria-label="CERN 1989 计算设施分布图"></svg>
+      <aside class="hud" aria-live="polite">
+        <p class="hud-kicker">Footnotes</p>
+        <p class="hud-stat" id="stat-total">—</p>
         <div id="detail">
-          <h3>—</h3>
-          <div class="meta">悬停电脑图标</div>
-          <p>每个小图标代表 1 台（或 1 CU / 1 条线）。数量 &gt;24 时显示 24 个 + 标注总数。</p>
+          <p class="fn-kicker">提示</p>
+          <h3>悬停任意电脑节点</h3>
+          <p class="fn-body">力导向布局把同地点的多台机器散开；虚线表示主要控制/数据链路（示意）。</p>
+        </div>
+        <div class="legend" aria-label="图例">
+          <span><i style="border-color:#1d4ed8;background:#dbeafe"></i>IBM</span>
+          <span><i style="border-color:#0f172a;background:#e2e8f0"></i>VAX</span>
+          <span><i style="border-color:#475569;background:#f1f5f9"></i>工作站</span>
+          <span><i style="border-color:#64748b;background:#f8fafc"></i>PC</span>
+          <span><i style="border-color:#0f172a;background:#cbd5e1"></i>NeXT</span>
         </div>
       </aside>
     </div>
+  </div>
 
-    <section>
-      <h2>引用资料</h2>
-      <div class="refs">
-        <ol>
-          <li>CERN Computer Newsletter 187 (1987) — <a href="http://cds.cern.ch/record/1292500">cds.cern.ch/record/1292500</a></li>
-          <li>Tim Berners-Lee, <em>Information Management: A Proposal</em> (1989) — <a href="https://www.w3.org/History/1989/proposal.html">w3.org</a></li>
-          <li>FATMEN Report DD/89/15 — <a href="https://cds.cern.ch/record/2296370/files/fatmain.pdf">fatmain.pdf</a></li>
-          <li>LEP Control System (1989) — <a href="https://cds.cern.ch/record/292481/files/sl-95-091.pdf">sl-95-091.pdf</a></li>
-          <li>LEP Alarm System — <a href="https://inspirehep.net/files/13cac7b8a3d0eafdeae34610eef64afb">inspirehep.net</a></li>
-          <li>CERN Courier, LEP 首束流 — <a href="https://cerncourier.com/a/when-lep-cerns-first-big-collider-saw-beam/">cerncourier.com</a></li>
-          <li>P. Dimou, network names at CERN (1988) — <a href="https://sandbox-cds-rdm.web.cern.ch/records/hzb1n-15x80">Dimou report</a></li>
-          <li>CERN Meyrin site — <a href="https://voisins.cern/en/meyrin-site-point-1/">voisins.cern</a></li>
-          <li>地理边界 GeoJSON — SITG <a href="https://sitg.ge.ch/donnees/cad-commune">CAD_COMMUNE</a> / GEO_COMMUNES_CH_FR / GEO_LAC_LEMAN（见 <a href="geo/SOURCES.md">geo/SOURCES.md</a>）</li>
-        </ol>
-      </div>
-    </section>
+  <section class="refs-wrap">
+    <h2>引用资料</h2>
+    <div class="refs">
+      <ol>
+        <li>CERN Computer Newsletter 187 (1987) — <a href="http://cds.cern.ch/record/1292500">cds.cern.ch/record/1292500</a></li>
+        <li>Tim Berners-Lee, <em>Information Management: A Proposal</em> (1989) — <a href="https://www.w3.org/History/1989/proposal.html">w3.org</a></li>
+        <li>FATMEN Report DD/89/15 — <a href="https://cds.cern.ch/record/2296370/files/fatmain.pdf">fatmain.pdf</a></li>
+        <li>LEP Control System (1989) — <a href="https://cds.cern.ch/record/292481/files/sl-95-091.pdf">sl-95-091.pdf</a></li>
+        <li>LEP Alarm System — <a href="https://inspirehep.net/files/13cac7b8a3d0eafdeae34610eef64afb">inspirehep.net</a></li>
+        <li>CERN Courier, LEP 首束流 — <a href="https://cerncourier.com/a/when-lep-cerns-first-big-collider-saw-beam/">cerncourier.com</a></li>
+        <li>地理边界 — SITG GeoJSON（<a href="geo/SOURCES.md">SOURCES.md</a>）</li>
+      </ol>
+    </div>
+  </section>
 
-    <footer>
-      <a href="PREVIEW.md">如何预览（云端勿双击）</a> ·
-      <a href="web-birth-story.md">web-birth-story.md</a> ·
-      <a href="frontend-eras-summary.md">frontend-eras-summary.md</a>
-    </footer>
-  </main>
+  <footer>
+    <a href="PREVIEW.md">预览说明</a> ·
+    <a href="web-birth-story.md">web-birth-story.md</a> ·
+    <a href="frontend-eras-summary.md">frontend-eras-summary.md</a>
+  </footer>
 
 {{SCRIPTS}}
 </body>
