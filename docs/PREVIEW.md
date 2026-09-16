@@ -36,9 +36,11 @@ cd docs && python3 -m http.server 8080 --bind 0.0.0.0
 
 ## 本机 / 公网（直接点开即渲染）
 
-**请用 GitHack**（返回 `text/html`）：
+**请用 rawcdn（无灰色中间页）：**
 
-https://raw.githack.com/Amory0709/browser-basics/cursor/frontend-history-eras-e726/docs/cern-systems-1989.html
+https://rawcdn.githack.com/Amory0709/browser-basics/cursor/frontend-history-eras-e726/docs/cern-systems-1989.html
+
+**不要用** `raw.githack.com/...` — 会先出现 **「One more step」** 中间页：中间灰色 URL 框 + 黑边 + 红色按钮，**不是你的地图**。那是 GitHack 的确认页，不是页面 bug。
 
 **不要用** `cdn.jsdelivr.net/gh/.../*.html` — jsDelivr 对该路径返回 `text/plain`，浏览器只会显示源码。
 
