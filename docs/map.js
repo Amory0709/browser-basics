@@ -1,5 +1,5 @@
 (function () {
-  const MAP = { w: 960, h: 640, pad: 40 };
+  const MAP = { w: 1200, h: 720, pad: 28 };
 
   const PALETTE = {
     line: '#525252',
@@ -300,7 +300,8 @@
         `<p class="fn-kicker">${d.site}</p>` +
         `<h3>${d.label}</h3>` +
         `<p class="fn-meta">${t.label} · ${d.region}</p>` +
-        `<p class="fn-body">${d.detail}</p>`
+        `<p class="fn-body">${d.detail}</p>` +
+        `<p class="fn-coord">Site anchor ${d.siteLat.toFixed(4)}°N, ${d.siteLon.toFixed(4)}°E · dot is illustrative (clustered at site)</p>`
       );
     }
 
