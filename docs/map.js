@@ -152,18 +152,20 @@
   }
 
   function mercatorProjection(d3, geojson, width, height, pad) {
+    const innerW = width - 2 * pad;
+    const innerH = height - 2 * pad;
     const projection = d3.geoMercator();
     const boundsPath = d3.geoPath().projection(projection);
     const [[x0, y0], [x1, y1]] = boundsPath.bounds(geojson);
     const dx = x1 - x0;
     const dy = y1 - y0;
-    const midX = (x0 + x1) / 2;
-    const midY = (y0 + y1) / 2;
-    const scale =
-      0.95 / Math.max(dx / (width - 2 * pad), dy / (height - 2 * pad));
-    return projection
-      .scale(scale)
-      .translate([width / 2 - scale * midX, height / 2 - scale * midY]);
+    const k = 0.95 / Math.max(dx / innerW, dy / innerH);
+    projection.scale(projection.scale() * k);
+    projection.translate([
+      pad + (innerW - k * dx) / 2 - k * x0,
+      pad + (innerH - k * dy) / 2 - k * y0,
+    ]);
+    return projection;
   }
 
   function paintBoundaries(g, path, features, stroke, dash) {
