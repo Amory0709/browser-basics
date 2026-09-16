@@ -1,20 +1,18 @@
 (function () {
-  const MAP = { w: 960, h: 640, pad: 32 };
-  const COLLIDE = 5.5;
-  const COLORS = {
-    lakeFill: '#d9d9d9',
-    lakeStroke: '#737373',
-    chFill: '#ebe8e3',
-    frFill: '#dedad4',
-    border: '#44403c',
+  const MAP = { w: 960, h: 640, pad: 40 };
+
+  const PALETTE = {
+    water: { fill: '#d1d5db', stroke: '#6b7280' },
+    ch: { fill: '#f3f4f6', stroke: '#374151' },
+    fr: { fill: '#e5e7eb', stroke: '#374151' },
   };
 
   const TYPE = {
-    mainframe: { stroke: '#1d4ed8', fill: '#dbeafe', label: 'IBM mainframe' },
-    vax: { stroke: '#0f172a', fill: '#e2e8f0', label: 'VAX' },
-    workstation: { stroke: '#475569', fill: '#f1f5f9', label: 'Workstation' },
-    pc: { stroke: '#64748b', fill: '#f8fafc', label: 'PC / terminal' },
-    next: { stroke: '#0f172a', fill: '#cbd5e1', label: 'NeXT' },
+    mainframe: { color: '#2563eb', label: 'IBM mainframe' },
+    vax: { color: '#1e293b', label: 'VAX' },
+    workstation: { color: '#64748b', label: 'Workstation' },
+    pc: { color: '#78716c', label: 'PC / terminal' },
+    next: { color: '#0f172a', label: 'NeXT' },
   };
 
   const sites = [
@@ -91,14 +89,7 @@
   }
 
   function clusterRadius(count) {
-    return Math.min(110, 14 + Math.sqrt(count) * 7.5);
-  }
-
-  function pixelSpiral(i, n, spread) {
-    if (n <= 1) return { x: 0, y: 0 };
-    const angle = i * 2.399963;
-    const r = spread * Math.sqrt((i + 0.5) / n);
-    return { x: Math.cos(angle) * r, y: Math.sin(angle) * r };
+    return Math.min(52, 10 + Math.sqrt(count) * 4);
   }
 
   function expandComputers() {
@@ -123,177 +114,152 @@
     return nodes;
   }
 
-  function layoutAtSites(d3, nodes, projection) {
+  function layoutNodes(d3, nodes, projection) {
     const siteMeta = new Map(
       sites.map((s) => {
         const [cx, cy] = projection([s.lon, s.lat]);
         const count = s.groups.reduce((n, g) => n + g.count, 0);
-        return [s.id, { cx, cy, count, radius: clusterRadius(count) }];
+        return [s.id, { cx, cy, radius: clusterRadius(count) }];
       })
     );
 
     const grouped = d3.group(nodes, (d) => d.siteId);
     grouped.forEach((list, siteId) => {
-      const meta = siteMeta.get(siteId);
+      const { cx, cy, radius } = siteMeta.get(siteId);
       list.forEach((node, i) => {
-        node.cx = meta.cx;
-        node.cy = meta.cy;
-        node.clusterR = meta.radius;
-        const off = pixelSpiral(i, list.length, meta.radius);
-        node.x = meta.cx + off.x;
-        node.y = meta.cy + off.y;
+        const angle = i * 2.399963;
+        const r = radius * Math.sqrt((i + 0.5) / list.length);
+        node.cx = cx;
+        node.cy = cy;
+        node.x = cx + Math.cos(angle) * r;
+        node.y = cy + Math.sin(angle) * r;
       });
     });
 
     const sim = d3
       .forceSimulation(nodes)
-      .force('x', d3.forceX((d) => d.cx).strength(0.08))
-      .force('y', d3.forceY((d) => d.cy).strength(0.08))
-      .force('collide', d3.forceCollide(COLLIDE))
-      .force(
-        'radial',
-        d3.forceRadial((d) => d.clusterR, (d) => d.cx, (d) => d.cy).strength(0.35)
-      )
+      .force('x', d3.forceX((d) => d.cx).strength(0.2))
+      .force('y', d3.forceY((d) => d.cy).strength(0.2))
+      .force('collide', d3.forceCollide(3.2))
       .stop();
 
-    for (let t = 0; t < 180; t += 1) sim.tick();
+    for (let i = 0; i < 150; i += 1) sim.tick();
   }
 
-  function drawComputer(g, type) {
-    const palette = TYPE[type] || TYPE.pc;
-    g.append('rect')
-      .attr('class', 'computer-screen')
-      .attr('x', -4.5)
-      .attr('y', -4)
-      .attr('width', 9)
-      .attr('height', 6.5)
-      .attr('rx', 1.2)
-      .attr('fill', '#fff')
+  function paintRegion(g, path, features, palette) {
+    g.selectAll('path')
+      .data(features)
+      .join('path')
+      .attr('d', path)
+      .attr('fill', palette.fill)
       .attr('stroke', palette.stroke)
-      .attr('stroke-width', 1);
-    g.append('rect')
-      .attr('x', -3.2)
-      .attr('y', -2.8)
-      .attr('width', 6.4)
-      .attr('height', 4.5)
-      .attr('rx', 0.6)
-      .attr('fill', palette.fill);
-    g.append('rect')
-      .attr('x', -1)
-      .attr('y', 2.6)
-      .attr('width', 2)
-      .attr('height', 1.6)
-      .attr('fill', palette.stroke);
-    g.append('rect')
-      .attr('x', -2.8)
-      .attr('y', 4)
-      .attr('width', 5.6)
-      .attr('height', 0.9)
-      .attr('rx', 0.4)
-      .attr('fill', palette.stroke);
-  }
-
-  function drawBoundaries(gRoot, path, lakeFeatures, landFeatures) {
-    gRoot
-      .append('g')
-      .selectAll('path.lake')
-      .data(lakeFeatures)
-      .join('path')
-      .attr('class', 'lake')
-      .attr('d', path)
-      .attr('fill', COLORS.lakeFill)
-      .attr('stroke', COLORS.lakeStroke)
-      .attr('stroke-width', 1)
-      .attr('stroke-linejoin', 'round');
-
-    gRoot
-      .append('g')
-      .selectAll('path.commune')
-      .data(landFeatures)
-      .join('path')
-      .attr('class', (d) => `commune ${d.country}`)
-      .attr('d', path)
-      .attr('fill', (d) => (d.country === 'ch' ? COLORS.chFill : COLORS.frFill))
-      .attr('stroke', 'none');
-
-    const outlines = [...landFeatures, ...lakeFeatures];
-    gRoot
-      .append('g')
-      .attr('class', 'geo-outlines')
-      .attr('pointer-events', 'none')
-      .selectAll('path.outline')
-      .data(outlines)
-      .join('path')
-      .attr('class', 'outline')
-      .attr('d', path)
-      .attr('fill', 'none')
-      .attr('stroke', COLORS.border)
-      .attr('stroke-width', 1.1)
-      .attr('stroke-linejoin', 'round');
-  }
-
-  function drawOutlinesOnly(gRoot, path, outlineFeatures) {
-    gRoot
-      .selectAll('path.outline')
-      .data(outlineFeatures)
-      .join('path')
-      .attr('class', 'outline')
-      .attr('d', path)
-      .attr('fill', 'none')
-      .attr('stroke', COLORS.border)
-      .attr('stroke-width', 1.15)
+      .attr('stroke-width', 0.9)
       .attr('stroke-linejoin', 'round');
   }
 
   function initMap() {
     const d3 = window.d3;
+    if (!window.CERN_GEO) throw new Error('Missing geo/bundle.js');
+
     const svg = d3.select('#map');
     svg.selectAll('*').remove();
     svg.attr('viewBox', `0 0 ${MAP.w} ${MAP.h}`);
 
-    if (!window.CERN_GEO) throw new Error('geo/bundle.js failed to load');
-
     const { ch, fr, lake } = window.CERN_GEO;
-    const chFeatures = ch.features.map((f) => ({ ...f, country: 'ch' }));
-    const frFeatures = fr.features.map((f) => ({ ...f, country: 'fr' }));
-    const landFeatures = [...frFeatures, ...chFeatures];
-    const fitGeo = {
+    if (!ch?.features?.length || !fr?.features?.length) {
+      throw new Error('GeoJSON communes empty');
+    }
+
+    const chF = ch.features.map((f) => ({ ...f, country: 'ch' }));
+    const frF = fr.features.map((f) => ({ ...f, country: 'fr' }));
+    const fit = {
       type: 'FeatureCollection',
-      features: [...landFeatures, ...lake.features],
+      features: [...frF, ...chF, ...(lake?.features || [])],
     };
 
     const projection = d3.geoMercator().fitExtent(
       [[MAP.pad, MAP.pad], [MAP.w - MAP.pad, MAP.h - MAP.pad]],
-      fitGeo
+      fit
     );
     const path = d3.geoPath(projection);
 
-    const gMap = svg.append('g').attr('class', 'map-layer');
-    drawBoundaries(gMap, path, lake.features, landFeatures);
+    const gBase = svg.append('g').attr('class', 'basemap');
+    if (lake?.features?.length) {
+      paintRegion(gBase.append('g'), path, lake.features, PALETTE.water);
+    }
+    paintRegion(gBase.append('g'), path, frF, PALETTE.fr);
+    paintRegion(gBase.append('g'), path, chF, PALETTE.ch);
 
-    const gNodes = svg.append('g').attr('class', 'node-layer');
-    const gLabels = svg.append('g').attr('class', 'label-layer');
+    gBase
+      .append('text')
+      .attr('x', projection([6.06, 46.26])[0])
+      .attr('y', projection([6.06, 46.26])[1])
+      .attr('class', 'region-tag')
+      .attr('text-anchor', 'middle')
+      .text('Switzerland');
+
+    gBase
+      .append('text')
+      .attr('x', projection([6.04, 46.28])[0])
+      .attr('y', projection([6.04, 46.28])[1])
+      .attr('class', 'region-tag')
+      .attr('text-anchor', 'middle')
+      .text('France');
 
     const nodes = expandComputers();
-    layoutAtSites(d3, nodes, projection);
+    layoutNodes(d3, nodes, projection);
 
-    const nodeSel = gNodes
-      .selectAll('g.computer-node')
+    const gNodes = svg.append('g').attr('class', 'nodes');
+    const dots = gNodes
+      .selectAll('circle.machine')
       .data(nodes, (d) => d.id)
+      .join('circle')
+      .attr('class', 'machine')
+      .attr('r', 2.2)
+      .attr('cx', (d) => d.x)
+      .attr('cy', (d) => d.y)
+      .attr('fill', (d) => (TYPE[d.type] || TYPE.pc).color)
+      .attr('stroke', '#fff')
+      .attr('stroke-width', 0.35);
+
+    const gSites = svg.append('g').attr('class', 'site-markers');
+    gSites
+      .selectAll('g.site')
+      .data(sites)
       .join('g')
-      .attr('class', 'computer-node')
-      .attr('transform', (d) => `translate(${d.x},${d.y})`);
+      .attr('class', 'site')
+      .attr('transform', (d) => {
+        const [x, y] = projection([d.lon, d.lat]);
+        return `translate(${x},${y})`;
+      })
+      .each(function (d) {
+        const g = d3.select(this);
+        const total = d.groups.reduce((s, gr) => s + gr.count, 0);
+        g.append('circle').attr('r', 5).attr('fill', 'none').attr('stroke', '#0014dc').attr('stroke-width', 1.2);
+        g.append('text')
+          .attr('y', -10)
+          .attr('text-anchor', 'middle')
+          .attr('class', 'site-name')
+          .text(d.name.split(' · ')[0]);
+        g.append('text')
+          .attr('y', 16)
+          .attr('text-anchor', 'middle')
+          .attr('class', 'site-count')
+          .text(`${total}`);
+      });
 
-    nodeSel.each(function (d) {
-      drawComputer(d3.select(this), d.type);
-    });
-
-    // Outlines on top so communes stay visible under dense clusters
-    const gBorderTop = svg.append('g').attr('class', 'border-top').attr('pointer-events', 'none');
-    drawOutlinesOnly(gBorderTop, path, [...landFeatures, ...lake.features]);
+    svg.append('g').attr('class', 'basemap-top').attr('pointer-events', 'none')
+      .selectAll('path')
+      .data([...frF, ...chF])
+      .join('path')
+      .attr('d', path)
+      .attr('fill', 'none')
+      .attr('stroke', '#1f2937')
+      .attr('stroke-width', 0.55)
+      .attr('stroke-linejoin', 'round');
 
     const detail = d3.select('#detail');
-    const statTotal = d3.select('#stat-total');
+    d3.select('#stat-total').text(`${nodes.length} machines · ${sites.length} sites`);
 
     function showDetail(d) {
       const t = TYPE[d.type] || TYPE.pc;
@@ -301,63 +267,37 @@
         `<p class="fn-kicker">${d.site}</p>` +
         `<h3>${d.label}</h3>` +
         `<p class="fn-meta">${t.label} · ${d.region}</p>` +
-        `<p class="fn-body">${d.detail}</p>` +
-        `<p class="fn-coord">Site ${d.siteLat.toFixed(5)}°N, ${d.siteLon.toFixed(5)}°E</p>`
+        `<p class="fn-body">${d.detail}</p>`
       );
     }
 
-    statTotal.text(`${nodes.length} machines · 7 sites`);
-
-    nodeSel
-      .on('mouseenter', function (_, d) {
-        d3.selectAll('.computer-node').classed('is-active', false);
-        d3.select(this).classed('is-active', true).attr('transform', `translate(${d.x},${d.y}) scale(1.15)`);
-        showDetail(d);
-      })
-      .on('mouseleave', function (_, d) {
-        d3.select(this).classed('is-active', false).attr('transform', `translate(${d.x},${d.y})`);
-      })
-      .on('focus', function (_, d) {
-        d3.selectAll('.computer-node').classed('is-active', false);
-        d3.select(this).classed('is-active', true).attr('transform', `translate(${d.x},${d.y}) scale(1.15)`);
-        showDetail(d);
-      })
+    dots
       .attr('tabindex', 0)
-      .attr('role', 'button')
-      .attr('aria-label', (d) => `${d.label}, ${d.site}`);
-
-    gLabels
-      .selectAll('g.site-label')
-      .data(sites)
-      .join('g')
-      .attr('class', 'site-label')
-      .attr('transform', (d) => {
-        const [x, y] = projection([d.lon, d.lat]);
-        return `translate(${x},${y - 20})`;
+      .on('mouseenter focus', function (_, d) {
+        d3.selectAll('.machine').attr('opacity', 0.35);
+        d3.select(this).attr('opacity', 1).attr('r', 4);
+        showDetail(d);
       })
-      .each(function (d) {
-        d3.select(this)
-          .append('text')
-          .attr('class', 'site-name')
-          .attr('y', 0)
-          .attr('text-anchor', 'middle')
-          .text(d.name.split(' · ')[0]);
+      .on('mouseleave blur', function () {
+        d3.selectAll('.machine').attr('opacity', 0.75).attr('r', 2.2);
       });
+
+    dots.attr('opacity', 0.75);
   }
 
-  function boot(attempts) {
+  function boot(n) {
     if (typeof window.d3 === 'undefined' || !window.CERN_GEO) {
-      if (attempts > 240) {
-        showMapError('Scripts not ready');
+      if (n > 200) {
+        showMapError('Failed to load d3 or geo/bundle.js');
         return;
       }
-      setTimeout(() => boot(attempts + 1), 25);
+      setTimeout(() => boot(n + 1), 30);
       return;
     }
     try {
       initMap();
-    } catch (err) {
-      showMapError(`Map failed: ${err.message}`);
+    } catch (e) {
+      showMapError(e.message);
     }
   }
 

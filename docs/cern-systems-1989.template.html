@@ -62,31 +62,38 @@
       display: block;
       width: 100%;
       height: auto;
-      min-height: min(75vh, 640px);
+      min-height: min(78vh, 680px);
       border: none;
       outline: none;
       box-shadow: none;
-      background: transparent;
+      background: #fff;
     }
 
-    svg#map {
+    .region-tag {
+      font-size: 13px;
+      font-weight: 600;
+      fill: #57534e;
+      pointer-events: none;
+    }
+
+    .site-name {
+      font-size: 10px;
+      font-weight: 600;
+      fill: #1c1917;
+      pointer-events: none;
+    }
+
+    .site-count {
+      font-size: 9px;
+      fill: #0014dc;
+      font-weight: 600;
+      pointer-events: none;
+    }
+
+    .machine {
       cursor: pointer;
       outline: none;
-      opacity: 0.88;
     }
-
-    .computer-node:hover .computer-screen,
-    .computer-node.is-active .computer-screen {
-      stroke-width: 1.6;
-    }
-
-    .computer-node:focus-visible .computer-screen {
-      stroke: var(--accent);
-      stroke-width: 2;
-    }
-
-    .site-label { pointer-events: none; }
-    .site-name { font-size: 11px; fill: #44403c; font-weight: 600; }
 
     .map-status {
       font-size: 14px;
@@ -215,7 +222,7 @@
 <body>
   <header class="hero">
     <h1>1989 · CERN computing facilities</h1>
-    <p>Each icon is one machine, anchored to its site on the <strong>SITG commune basemap</strong> (Geneva region, Switzerland &amp; France).</p>
+    <p>Basemap: SITG commune boundaries (Geneva region). Each dot is one machine; blue rings mark official site coordinates.</p>
   </header>
 
   <div class="stage">
@@ -227,7 +234,7 @@
         <div id="detail">
           <p class="fn-kicker">Hint</p>
           <h3>Hover a computer icon</h3>
-          <p class="fn-body">Basemap: official SITG commune boundaries and Lake Geneva (neutral gray water).</p>
+          <p class="fn-body">Hover a dot. Map draws first; machines stay semi-transparent so borders remain readable.</p>
         </div>
         <div class="legend" aria-label="Legend">
           <span><i style="border-color:#1d4ed8;background:#dbeafe"></i>IBM</span>
@@ -266,6 +273,8 @@
     </p>
   </footer>
 
-{{SCRIPTS}}
+  <script src="vendor/d3.min.js"></script>
+  <script src="geo/bundle.js"></script>
+  <script src="map.js"></script>
 </body>
 </html>
