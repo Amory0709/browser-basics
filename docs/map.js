@@ -1,5 +1,6 @@
 (function () {
   const MAP = { w: 960, h: 640, pad: 28 };
+  const COLLIDE = 5.5;
 
   const TYPE = {
     mainframe: { stroke: '#1d4ed8', fill: '#dbeafe', label: 'IBM 主机' },
@@ -82,26 +83,22 @@
       `<text x="${MAP.w / 2}" y="${MAP.h / 2}" text-anchor="middle" class="map-status">${message}</text>`;
   }
 
-  /** 同地点多台机器：在 WGS84 上微小螺旋偏移（米），再投影 */
-  function geoSpiral(i, n, centerLon, centerLat, maxRadiusM) {
-    if (n <= 1) return { lon: centerLon, lat: centerLat };
+  function clusterRadius(count) {
+    return Math.min(110, 14 + Math.sqrt(count) * 7.5);
+  }
+
+  function pixelSpiral(i, n, spread) {
+    if (n <= 1) return { x: 0, y: 0 };
     const angle = i * 2.399963;
-    const r = maxRadiusM * Math.sqrt((i + 0.5) / n);
-    const latRad = (centerLat * Math.PI) / 180;
-    const dLat = (r * Math.sin(angle)) / 111320;
-    const dLon = (r * Math.cos(angle)) / (111320 * Math.cos(latRad));
-    return { lon: centerLon + dLon, lat: centerLat + dLat };
+    const r = spread * Math.sqrt((i + 0.5) / n);
+    return { x: Math.cos(angle) * r, y: Math.sin(angle) * r };
   }
 
   function expandComputers() {
     const nodes = [];
     sites.forEach((site) => {
-      const siteTotal = site.groups.reduce((s, g) => s + g.count, 0);
-      const maxR = Math.min(120, 12 + Math.sqrt(siteTotal) * 4);
-      let idx = 0;
       site.groups.forEach((group) => {
         for (let i = 0; i < group.count; i += 1) {
-          const geo = geoSpiral(idx, siteTotal, site.lon, site.lat, maxR);
           nodes.push({
             id: `${site.id}-${group.type}-${i}`,
             type: group.type,
@@ -110,14 +107,62 @@
             site: site.name,
             region: site.region,
             siteId: site.id,
-            lon: geo.lon,
-            lat: geo.lat,
+            siteLon: site.lon,
+            siteLat: site.lat,
           });
-          idx += 1;
         }
       });
     });
     return nodes;
+  }
+
+  function layoutAtSites(nodes, projection) {
+    const siteMeta = new Map(
+      sites.map((s) => {
+        const [cx, cy] = projection([s.lon, s.lat]);
+        const count = s.groups.reduce((n, g) => n + g.count, 0);
+        return [s.id, { cx, cy, count, radius: clusterRadius(count) }];
+      })
+    );
+
+    const grouped = d3.group(nodes, (d) => d.siteId);
+    grouped.forEach((list, siteId) => {
+      const meta = siteMeta.get(siteId);
+      list.forEach((node, i) => {
+        node.cx = meta.cx;
+        node.cy = meta.cy;
+        node.clusterR = meta.radius;
+        const off = pixelSpiral(i, list.length, meta.radius);
+        node.x = meta.cx + off.x;
+        node.y = meta.cy + off.y;
+      });
+    });
+
+    const sim = d3
+      .forceSimulation(nodes)
+      .force('x', d3.forceX((d) => d.cx).strength(0.08))
+      .force('y', d3.forceY((d) => d.cy).strength(0.08))
+      .force('collide', d3.forceCollide(COLLIDE))
+      .force(
+        'radial',
+        d3
+          .forceRadial((d) => d.clusterR, (d) => d.cx, (d) => d.cy)
+          .strength(0.35)
+      )
+      .stop();
+
+    for (let t = 0; t < 180; t += 1) sim.tick();
+
+    nodes.forEach((node) => {
+      const inv = projection.invert([node.x, node.y]);
+      if (inv) {
+        node.lon = inv[0];
+        node.lat = inv[1];
+      } else {
+        node.lon = node.siteLon;
+        node.lat = node.siteLat;
+      }
+    });
   }
 
   function drawComputer(g, type) {
@@ -162,7 +207,7 @@
 
     if (!window.CERN_GEO) throw new Error('geo/bundle.js 未加载');
 
-    const { ch, fr, lake } = window.CERN_GEO;
+    const { ch, fr } = window.CERN_GEO;
     const allFeatures = [
       ...ch.features.map((f) => ({ ...f, country: 'ch' })),
       ...fr.features.map((f) => ({ ...f, country: 'fr' })),
@@ -185,18 +230,8 @@
       .attr('class', (d) => `commune ${d.country}`)
       .attr('d', path);
 
-    gMap.selectAll('path.lake')
-      .data(lake.features)
-      .join('path')
-      .attr('class', 'lake')
-      .attr('d', path);
-
     const nodes = expandComputers();
-    nodes.forEach((node) => {
-      const [x, y] = projection([node.lon, node.lat]);
-      node.x = x;
-      node.y = y;
-    });
+    layoutAtSites(nodes, projection);
 
     const nodeSel = gNodes
       .selectAll('g.computer-node')
@@ -219,11 +254,11 @@
         `<h3>${d.label}</h3>` +
         `<p class="fn-meta">${t.label} · ${d.region}</p>` +
         `<p class="fn-body">${d.detail}</p>` +
-        `<p class="fn-coord">${d.lat.toFixed(5)}°N, ${d.lon.toFixed(5)}°E</p>`
+        `<p class="fn-coord">站点 ${d.siteLat.toFixed(5)}°N, ${d.siteLon.toFixed(5)}°E</p>`
       );
     }
 
-    statTotal.text(`${nodes.length} 台 · WGS84 投影`);
+    statTotal.text(`${nodes.length} 台 · 7 个站点`);
 
     nodeSel
       .on('mouseenter', function (_, d) {
@@ -253,8 +288,7 @@
         return `translate(${x},${y - 18})`;
       })
       .each(function (d) {
-        const g = d3.select(this);
-        g.append('text').attr('class', 'site-name').attr('y', 0).text(d.name.split(' · ')[0]);
+        d3.select(this).append('text').attr('class', 'site-name').attr('y', 0).text(d.name.split(' · ')[0]);
       });
   }
 
