@@ -69,6 +69,41 @@
       align-items: start;
     }
 
+    .map-col {
+      min-width: 0;
+    }
+
+    .map-tilt {
+      perspective: 1200px;
+      perspective-origin: 50% 38%;
+      padding: 0.25rem 0 1.75rem;
+    }
+
+    .map-plane {
+      transform: rotateX(54deg) rotateZ(-1.5deg);
+      transform-origin: 50% 62%;
+      transform-style: preserve-3d;
+      will-change: transform;
+    }
+
+    .map-plane svg {
+      filter: drop-shadow(0 22px 36px rgba(28, 25, 23, 0.1));
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .map-tilt {
+        perspective: none;
+        padding-bottom: 0.5rem;
+      }
+      .map-plane {
+        transform: none;
+        filter: none;
+      }
+      .map-plane svg {
+        filter: none;
+      }
+    }
+
     @media (max-width: 900px) {
       .map-stage {
         grid-template-columns: 1fr;
@@ -125,6 +160,11 @@
     .machine {
       cursor: pointer;
       outline: none;
+    }
+
+    .machine:focus-visible .machine-tower {
+      stroke: #0014dc;
+      stroke-width: 1.2;
     }
 
     .map-status {
@@ -248,19 +288,25 @@
 <body>
   <header class="hero">
     <h1>1989 · CERN computing facilities</h1>
-    <p>Basemap: SITG commune boundaries. Blue rings = real site coordinates (WGS84). Each dot is one machine, clustered around its site for readability—not individual GPS positions.</p>
+    <p>Tilted map: each site is one real coordinate; machines at the same site stack upward in 3D when counts are high. Blue rings mark site anchors.</p>
   </header>
 
   <div class="stage">
     <div class="map-stage">
-      <svg id="map" viewBox="0 0 1200 720" preserveAspectRatio="xMidYMid meet" aria-label="CERN 1989 computing facilities map"></svg>
+      <div class="map-col">
+        <div class="map-tilt">
+          <div class="map-plane">
+            <svg id="map" viewBox="0 0 1200 780" preserveAspectRatio="xMidYMid meet" aria-label="CERN 1989 computing facilities map"></svg>
+          </div>
+        </div>
+      </div>
       <aside class="hud" aria-live="polite">
         <p class="hud-kicker">Footnotes</p>
         <p class="hud-stat" id="stat-total">—</p>
         <div id="detail">
           <p class="fn-kicker">Hint</p>
           <h3>Hover a dot</h3>
-          <p class="fn-body">7 sites use documented anchors; 412 dots spiral at each site. Hover for type and source notes.</p>
+          <p class="fn-body">Same-site machines share one ground point and stack in depth. Hover a tower for specs.</p>
         </div>
         <div class="legend" aria-label="Legend">
           <span><i style="border-color:#1d4ed8;background:#dbeafe"></i>IBM</span>

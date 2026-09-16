@@ -1,5 +1,8 @@
 (function () {
-  const MAP = { w: 1200, h: 720, pad: 28 };
+  const MAP = { w: 1200, h: 780, pad: 28, stackPadTop: 72 };
+
+  /** Isometric-ish offset so stacks read as depth when the map plane is tilted. */
+  const STACK = { depth: 0.45, minStep: 0.42, maxStep: 3.4, maxRise: 118 };
 
   const PALETTE = {
     line: '#525252',
@@ -93,8 +96,8 @@
     }
   }
 
-  function clusterRadius(count) {
-    return Math.min(52, 10 + Math.sqrt(count) * 4);
+  function stackStep(count) {
+    return Math.min(STACK.maxStep, Math.max(STACK.minStep, STACK.maxRise / Math.max(count, 1)));
   }
 
   function expandComputers() {
@@ -119,36 +122,30 @@
     return nodes;
   }
 
-  function layoutNodes(d3, nodes, projection) {
-    const siteMeta = new Map(
+  function layoutStackedNodes(d3, nodes, projection) {
+    const siteGround = new Map(
       sites.map((s) => {
         const [cx, cy] = projection([s.lon, s.lat]);
-        const count = s.groups.reduce((n, g) => n + g.count, 0);
-        return [s.id, { cx, cy, radius: clusterRadius(count) }];
+        return [s.id, { cx, cy }];
       })
     );
 
     const grouped = d3.group(nodes, (d) => d.siteId);
     grouped.forEach((list, siteId) => {
-      const { cx, cy, radius } = siteMeta.get(siteId);
+      const ground = siteGround.get(siteId);
+      if (!ground) return;
+      const { cx, cy } = ground;
+      const step = stackStep(list.length);
+      list.sort((a, b) => a.id.localeCompare(b.id));
       list.forEach((node, i) => {
-        const angle = i * 2.399963;
-        const r = radius * Math.sqrt((i + 0.5) / list.length);
-        node.cx = cx;
-        node.cy = cy;
-        node.x = cx + Math.cos(angle) * r;
-        node.y = cy + Math.sin(angle) * r;
+        node.groundX = cx;
+        node.groundY = cy;
+        node.stackIndex = i;
+        node.stackTotal = list.length;
+        node.gx = cx + i * STACK.depth;
+        node.gy = cy - i * step;
       });
     });
-
-    const sim = d3
-      .forceSimulation(nodes)
-      .force('x', d3.forceX((d) => d.cx).strength(0.2))
-      .force('y', d3.forceY((d) => d.cy).strength(0.2))
-      .force('collide', d3.forceCollide(3.2))
-      .stop();
-
-    for (let i = 0; i < 150; i += 1) sim.tick();
   }
 
   function fixRing(d3, ring, isExterior) {
@@ -224,7 +221,7 @@
     };
 
     const projection = d3.geoMercator().fitExtent(
-      [[MAP.pad, MAP.pad], [MAP.w - MAP.pad, MAP.h - MAP.pad]],
+      [[MAP.pad, MAP.pad + MAP.stackPadTop], [MAP.w - MAP.pad, MAP.h - MAP.pad]],
       fit
     );
     const path = d3.geoPath(projection);
@@ -250,20 +247,59 @@
       .text('France');
 
     const nodes = expandComputers();
-    layoutNodes(d3, nodes, projection);
+    layoutStackedNodes(d3, nodes, projection);
+
+    const gGround = svg.append('g').attr('class', 'site-ground');
+    gGround
+      .selectAll('ellipse.site-shadow')
+      .data(sites)
+      .join('ellipse')
+      .attr('class', 'site-shadow')
+      .attr('cx', (d) => projection([d.lon, d.lat])[0])
+      .attr('cy', (d) => projection([d.lon, d.lat])[1] + 2)
+      .attr('rx', (d) => 4 + Math.sqrt(d.groups.reduce((n, g) => n + g.count, 0)) * 0.9)
+      .attr('ry', 2.2)
+      .attr('fill', 'rgba(28,25,23,0.07)');
 
     const gNodes = svg.append('g').attr('class', 'nodes');
-    const dots = gNodes
-      .selectAll('circle.machine')
+    const machines = gNodes
+      .selectAll('g.machine')
       .data(nodes, (d) => d.id)
-      .join('circle')
+      .join('g')
       .attr('class', 'machine')
-      .attr('r', 2.2)
-      .attr('cx', (d) => d.x)
-      .attr('cy', (d) => d.y)
-      .attr('fill', (d) => (TYPE[d.type] || TYPE.pc).color)
-      .attr('stroke', '#fff')
-      .attr('stroke-width', 0.35);
+      .attr('transform', (d) => `translate(${d.gx},${d.gy})`)
+      .sort((a, b) => a.gy + a.gx - (b.gy + b.gx));
+
+    machines.each(function (d) {
+      const g = d3.select(this);
+      const col = (TYPE[d.type] || TYPE.pc).color;
+      g.append('ellipse')
+        .attr('class', 'machine-shadow')
+        .attr('cx', 0)
+        .attr('cy', 2.6)
+        .attr('rx', 2.4)
+        .attr('ry', 1.1)
+        .attr('fill', 'rgba(0,0,0,0.14)');
+      g.append('rect')
+        .attr('class', 'machine-tower')
+        .attr('x', -1.6)
+        .attr('y', -8.5)
+        .attr('width', 3.2)
+        .attr('height', 8.5)
+        .attr('rx', 0.6)
+        .attr('fill', col)
+        .attr('stroke', '#fff')
+        .attr('stroke-width', 0.35);
+      g.append('rect')
+        .attr('class', 'machine-screen')
+        .attr('x', -1.1)
+        .attr('y', -7.6)
+        .attr('width', 2.2)
+        .attr('height', 5.2)
+        .attr('rx', 0.35)
+        .attr('fill', '#fafafa')
+        .attr('opacity', 0.92);
+    });
 
     const gSites = svg.append('g').attr('class', 'site-markers');
     gSites
@@ -278,14 +314,19 @@
       .each(function (d) {
         const g = d3.select(this);
         const total = d.groups.reduce((s, gr) => s + gr.count, 0);
-        g.append('circle').attr('r', 5).attr('fill', 'none').attr('stroke', '#0014dc').attr('stroke-width', 1.2);
+        g.append('circle')
+          .attr('r', 4)
+          .attr('fill', 'none')
+          .attr('stroke', '#0014dc')
+          .attr('stroke-width', 1)
+          .attr('opacity', 0.85);
         g.append('text')
-          .attr('y', -10)
+          .attr('y', -12)
           .attr('text-anchor', 'middle')
           .attr('class', 'site-name')
           .text(d.name.split(' · ')[0]);
         g.append('text')
-          .attr('y', 16)
+          .attr('y', 18)
           .attr('text-anchor', 'middle')
           .attr('class', 'site-count')
           .text(`${total}`);
@@ -301,22 +342,24 @@
         `<h3>${d.label}</h3>` +
         `<p class="fn-meta">${t.label} · ${d.region}</p>` +
         `<p class="fn-body">${d.detail}</p>` +
-        `<p class="fn-coord">Site anchor ${d.siteLat.toFixed(4)}°N, ${d.siteLon.toFixed(4)}°E · dot is illustrative (clustered at site)</p>`
+        `<p class="fn-coord">Site ${d.siteLat.toFixed(4)}°N, ${d.siteLon.toFixed(4)}°E · stack ${d.stackIndex + 1}/${d.stackTotal} at same anchor</p>`
       );
     }
 
-    dots
+    machines
       .attr('tabindex', 0)
+      .attr('role', 'button')
+      .attr('opacity', 0.82)
       .on('mouseenter focus', function (_, d) {
-        d3.selectAll('.machine').attr('opacity', 0.35);
-        d3.select(this).attr('opacity', 1).attr('r', 4);
+        d3.selectAll('g.machine').attr('opacity', 0.28);
+        const g = d3.select(this).attr('opacity', 1);
+        g.select('.machine-tower').attr('stroke-width', 1);
         showDetail(d);
       })
       .on('mouseleave blur', function () {
-        d3.selectAll('.machine').attr('opacity', 0.75).attr('r', 2.2);
+        d3.selectAll('g.machine').attr('opacity', 0.82);
+        d3.selectAll('.machine-tower').attr('stroke-width', 0.35);
       });
-
-    dots.attr('opacity', 0.75);
   }
 
   function boot(n) {
