@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>1989 CERN 计算设施 · 地区分布</title>
+  <title>1989 CERN computing facilities · regional map</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
@@ -11,10 +11,6 @@
     :root {
       --ink: #1c1917;
       --muted: #78716c;
-      --paper: #fafaf9;
-      --panel: rgba(255, 255, 255, 0.92);
-      --line: #e7e5e4;
-      --land: #f5f5f4;
       --accent: #0014dc;
     }
 
@@ -61,37 +57,22 @@
       position: relative;
     }
 
-    #map {
+    #map,
+    svg#map {
       display: block;
       width: 100%;
       height: auto;
       min-height: min(75vh, 640px);
+      border: none;
+      outline: none;
+      box-shadow: none;
       background: transparent;
     }
 
-    .commune { stroke: none; vector-effect: non-scaling-stroke; }
-    .commune.ch { fill: #fafaf9; }
-    .commune.fr { fill: #f0f0ef; }
-    .commune-outline {
-      fill: none;
-      stroke: #57534e;
-      stroke-width: 0.85;
-      vector-effect: non-scaling-stroke;
-      pointer-events: none;
-    }
-    .lake {
-      fill: #e8e8e8;
-      stroke: #a3a3a3;
-      stroke-width: 0.75;
-      vector-effect: non-scaling-stroke;
-    }
-
-    .site-link { display: none; }
-
-    .computer-node {
+    svg#map {
       cursor: pointer;
       outline: none;
-      opacity: 0.92;
+      opacity: 0.88;
     }
 
     .computer-node:hover .computer-screen,
@@ -104,9 +85,8 @@
       stroke-width: 2;
     }
 
-    .site-label { pointer-events: none; text-anchor: middle; }
+    .site-label { pointer-events: none; }
     .site-name { font-size: 11px; fill: #44403c; font-weight: 600; }
-    .site-count { font-size: 9px; fill: #a8a29e; }
 
     .map-status {
       font-size: 14px;
@@ -117,7 +97,7 @@
       position: absolute;
       top: 0.5rem;
       right: 0.5rem;
-      width: min(260px, calc(100% - 1rem));
+      width: min(280px, calc(100% - 1rem));
       padding: 0;
       border: none;
       background: transparent;
@@ -175,8 +155,6 @@
       flex-wrap: wrap;
       gap: 0.5rem 0.85rem;
       margin-top: 0.65rem;
-      padding-top: 0;
-      border-top: none;
       font-size: 0.72rem;
       color: var(--muted);
     }
@@ -236,25 +214,25 @@
 </head>
 <body>
   <header class="hero">
-    <h1>1989 · CERN 计算设施</h1>
-    <p>每台计算机按<strong>站点 WGS84 坐标</strong>投影到 SITG 市镇地图；同楼多台仅在约百米内微偏移以免重叠。</p>
+    <h1>1989 · CERN computing facilities</h1>
+    <p>Each icon is one machine, anchored to its site on the <strong>SITG commune basemap</strong> (Geneva region, Switzerland &amp; France).</p>
   </header>
 
   <div class="stage">
     <div class="map-stage">
-      <svg id="map" viewBox="0 0 960 640" role="img" aria-label="CERN 1989 计算设施分布图"></svg>
+      <svg id="map" viewBox="0 0 960 640" role="img" aria-label="CERN 1989 computing facilities map"></svg>
       <aside class="hud" aria-live="polite">
         <p class="hud-kicker">Footnotes</p>
         <p class="hud-stat" id="stat-total">—</p>
         <div id="detail">
-          <p class="fn-kicker">提示</p>
-          <h3>悬停地图上的电脑</h3>
-          <p class="fn-body">底图：SITG 市镇边界 + 日内瓦湖轮廓（灰色水域，无蓝底）。</p>
+          <p class="fn-kicker">Hint</p>
+          <h3>Hover a computer icon</h3>
+          <p class="fn-body">Basemap: official SITG commune boundaries and Lake Geneva (neutral gray water).</p>
         </div>
-        <div class="legend" aria-label="图例">
+        <div class="legend" aria-label="Legend">
           <span><i style="border-color:#1d4ed8;background:#dbeafe"></i>IBM</span>
           <span><i style="border-color:#0f172a;background:#e2e8f0"></i>VAX</span>
-          <span><i style="border-color:#475569;background:#f1f5f9"></i>工作站</span>
+          <span><i style="border-color:#475569;background:#f1f5f9"></i>Workstation</span>
           <span><i style="border-color:#64748b;background:#f8fafc"></i>PC</span>
           <span><i style="border-color:#0f172a;background:#cbd5e1"></i>NeXT</span>
         </div>
@@ -263,7 +241,7 @@
   </div>
 
   <section class="refs-wrap">
-    <h2>引用资料</h2>
+    <h2>References</h2>
     <div class="refs">
       <ol>
         <li>CERN Computer Newsletter 187 (1987) — <a href="http://cds.cern.ch/record/1292500">cds.cern.ch/record/1292500</a></li>
@@ -271,19 +249,18 @@
         <li>FATMEN Report DD/89/15 — <a href="https://cds.cern.ch/record/2296370/files/fatmain.pdf">fatmain.pdf</a></li>
         <li>LEP Control System (1989) — <a href="https://cds.cern.ch/record/292481/files/sl-95-091.pdf">sl-95-091.pdf</a></li>
         <li>LEP Alarm System — <a href="https://inspirehep.net/files/13cac7b8a3d0eafdeae34610eef64afb">inspirehep.net</a></li>
-        <li>CERN Courier, LEP 首束流 — <a href="https://cerncourier.com/a/when-lep-cerns-first-big-collider-saw-beam/">cerncourier.com</a></li>
-        <li>地理边界 — SITG GeoJSON（<a href="geo/SOURCES.md">SOURCES.md</a>）</li>
+        <li>CERN Courier, first LEP beam — <a href="https://cerncourier.com/a/when-lep-cerns-first-big-collider-saw-beam/">cerncourier.com</a></li>
+        <li>Boundaries — SITG GeoJSON (<a href="geo/SOURCES.md">SOURCES.md</a>)</li>
       </ol>
     </div>
   </section>
 
   <footer>
-    <p><strong>在线预览：</strong>
-      <a href="https://raw.githack.com/Amory0709/browser-basics/cursor/frontend-history-eras-e726/docs/cern-systems-1989.html">GitHack 打开地图</a>
-      （勿用 jsDelivr 的 .html 链，会显示源码）
+    <p><strong>Preview:</strong>
+      <a href="https://raw.githack.com/Amory0709/browser-basics/cursor/frontend-history-eras-e726/docs/cern-systems-1989.html">Open via GitHack</a>
     </p>
     <p>
-      <a href="PREVIEW.md">预览说明</a> ·
+      <a href="PREVIEW.md">Preview notes</a> ·
       <a href="web-birth-story.md">web-birth-story.md</a> ·
       <a href="frontend-eras-summary.md">frontend-eras-summary.md</a>
     </p>

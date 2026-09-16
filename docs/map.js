@@ -1,12 +1,19 @@
 (function () {
-  const MAP = { w: 960, h: 640, pad: 28 };
+  const MAP = { w: 960, h: 640, pad: 32 };
   const COLLIDE = 5.5;
+  const COLORS = {
+    lakeFill: '#d9d9d9',
+    lakeStroke: '#737373',
+    chFill: '#ebe8e3',
+    frFill: '#dedad4',
+    border: '#44403c',
+  };
 
   const TYPE = {
-    mainframe: { stroke: '#1d4ed8', fill: '#dbeafe', label: 'IBM 主机' },
+    mainframe: { stroke: '#1d4ed8', fill: '#dbeafe', label: 'IBM mainframe' },
     vax: { stroke: '#0f172a', fill: '#e2e8f0', label: 'VAX' },
-    workstation: { stroke: '#475569', fill: '#f1f5f9', label: '工作站' },
-    pc: { stroke: '#64748b', fill: '#f8fafc', label: 'PC / 终端' },
+    workstation: { stroke: '#475569', fill: '#f1f5f9', label: 'Workstation' },
+    pc: { stroke: '#64748b', fill: '#f8fafc', label: 'PC / terminal' },
     next: { stroke: '#0f172a', fill: '#cbd5e1', label: 'NeXT' },
   };
 
@@ -14,65 +21,65 @@
     {
       id: 'b513',
       name: 'Building 513 · Computer Centre',
-      region: 'Meyrin · 瑞士侧',
+      region: 'Meyrin · Switzerland',
       lon: 6.05351,
       lat: 46.23377,
       groups: [
-        { type: 'mainframe', count: 20, label: 'IBM VM/CMS', detail: '~20 CU；~60 GB 用户盘 [1]' },
-        { type: 'vax', count: 2, label: 'VXCRNA + VXCRNB', detail: '8650 + 8800；~4.5 CU [1]' },
-        { type: 'pc', count: 136, label: 'Index 终端线', detail: '72+64 条 Index 线 [1]' },
+        { type: 'mainframe', count: 20, label: 'IBM VM/CMS', detail: '~20 CU; ~60 GB user disk [1]' },
+        { type: 'vax', count: 2, label: 'VXCRNA + VXCRNB', detail: '8650 + 8800; ~4.5 CU [1]' },
+        { type: 'pc', count: 136, label: 'Index terminal lines', detail: '72 + 64 Index lines [1]' },
       ],
     },
     {
       id: 'b31',
       name: 'Building 31',
-      region: 'Meyrin · Tim BL',
+      region: 'Meyrin · Tim Berners-Lee',
       lon: 6.0568,
       lat: 46.2317,
-      groups: [{ type: 'next', count: 1, label: 'NeXT', detail: '1989 提案；1990 WWW [2]' }],
+      groups: [{ type: 'next', count: 1, label: 'NeXT', detail: '1989 proposal; WWW in 1990 [2]' }],
     },
     {
       id: 'scr',
       name: 'Meyrin SCR',
-      region: '技术/安全控制',
+      region: 'Safety / technical control',
       lon: 6.0518,
       lat: 46.2352,
-      groups: [{ type: 'pc', count: 50, label: 'LEP 报警系统', detail: '50+ 计算机 [5]' }],
+      groups: [{ type: 'pc', count: 50, label: 'LEP alarm system', detail: '50+ computers [5]' }],
     },
     {
       id: 'pcr',
       name: 'Prévessin PCR',
-      region: '法国侧 · 控制室',
+      region: 'France · control room',
       lon: 6.0120,
       lat: 46.2720,
       groups: [
-        { type: 'workstation', count: 12, label: 'Apollo 工作站', detail: 'LEP/SPS 控制台 [4]' },
-        { type: 'pc', count: 56, label: '386 前端 PC', detail: '1989.7 首束流 [4][6]' },
+        { type: 'workstation', count: 12, label: 'Apollo workstations', detail: 'LEP/SPS consoles [4]' },
+        { type: 'pc', count: 56, label: '386 front-end PCs', detail: 'First LEP beam, Jul 1989 [4][6]' },
       ],
     },
     {
       id: 'p1',
       name: 'LEP Point 1',
-      region: '环上 · Meyrin',
+      region: 'Ring · Meyrin',
       lon: 6.0582,
       lat: 46.2361,
-      groups: [{ type: 'workstation', count: 30, label: 'ALEPH 等实验集群', detail: '数据重建 [3]' }],
+      groups: [{ type: 'workstation', count: 30, label: 'ALEPH cluster', detail: 'Data reconstruction [3]' }],
     },
     {
       id: 'p2',
       name: 'LEP Point 2 · Sergy',
-      region: '环上 · 法国',
+      region: 'Ring · France',
       lon: 6.0407,
       lat: 46.2503,
-      groups: [{ type: 'pc', count: 25, label: 'DELPHI / L3 区域', detail: 'Token Ring [4]' }],
+      groups: [{ type: 'pc', count: 25, label: 'DELPHI / L3 area', detail: 'Token Ring [4]' }],
     },
     {
       id: 'inst',
-      name: '欧洲 institute',
-      region: 'FATMEN 分布式',
+      name: 'European institutes',
+      region: 'FATMEN distributed',
       lon: 6.1437,
       lat: 46.2044,
-      groups: [{ type: 'vax', count: 80, label: '跨所协作节点', detail: '10+ OS 变种 [3]' }],
+      groups: [{ type: 'vax', count: 80, label: 'Collaboration nodes', detail: '10+ OS variants [3]' }],
     },
   ];
 
@@ -145,24 +152,11 @@
       .force('collide', d3.forceCollide(COLLIDE))
       .force(
         'radial',
-        d3
-          .forceRadial((d) => d.clusterR, (d) => d.cx, (d) => d.cy)
-          .strength(0.35)
+        d3.forceRadial((d) => d.clusterR, (d) => d.cx, (d) => d.cy).strength(0.35)
       )
       .stop();
 
     for (let t = 0; t < 180; t += 1) sim.tick();
-
-    nodes.forEach((node) => {
-      const inv = projection.invert([node.x, node.y]);
-      if (inv) {
-        node.lon = inv[0];
-        node.lat = inv[1];
-      } else {
-        node.lon = node.siteLon;
-        node.lat = node.siteLat;
-      }
-    });
   }
 
   function drawComputer(g, type) {
@@ -199,21 +193,73 @@
       .attr('fill', palette.stroke);
   }
 
+  function drawBoundaries(gRoot, path, lakeFeatures, landFeatures) {
+    gRoot
+      .append('g')
+      .selectAll('path.lake')
+      .data(lakeFeatures)
+      .join('path')
+      .attr('class', 'lake')
+      .attr('d', path)
+      .attr('fill', COLORS.lakeFill)
+      .attr('stroke', COLORS.lakeStroke)
+      .attr('stroke-width', 1)
+      .attr('stroke-linejoin', 'round');
+
+    gRoot
+      .append('g')
+      .selectAll('path.commune')
+      .data(landFeatures)
+      .join('path')
+      .attr('class', (d) => `commune ${d.country}`)
+      .attr('d', path)
+      .attr('fill', (d) => (d.country === 'ch' ? COLORS.chFill : COLORS.frFill))
+      .attr('stroke', 'none');
+
+    const outlines = [...landFeatures, ...lakeFeatures];
+    gRoot
+      .append('g')
+      .attr('class', 'geo-outlines')
+      .attr('pointer-events', 'none')
+      .selectAll('path.outline')
+      .data(outlines)
+      .join('path')
+      .attr('class', 'outline')
+      .attr('d', path)
+      .attr('fill', 'none')
+      .attr('stroke', COLORS.border)
+      .attr('stroke-width', 1.1)
+      .attr('stroke-linejoin', 'round');
+  }
+
+  function drawOutlinesOnly(gRoot, path, outlineFeatures) {
+    gRoot
+      .selectAll('path.outline')
+      .data(outlineFeatures)
+      .join('path')
+      .attr('class', 'outline')
+      .attr('d', path)
+      .attr('fill', 'none')
+      .attr('stroke', COLORS.border)
+      .attr('stroke-width', 1.15)
+      .attr('stroke-linejoin', 'round');
+  }
+
   function initMap() {
     const d3 = window.d3;
     const svg = d3.select('#map');
     svg.selectAll('*').remove();
     svg.attr('viewBox', `0 0 ${MAP.w} ${MAP.h}`);
 
-    if (!window.CERN_GEO) throw new Error('geo/bundle.js 未加载');
+    if (!window.CERN_GEO) throw new Error('geo/bundle.js failed to load');
 
     const { ch, fr, lake } = window.CERN_GEO;
     const chFeatures = ch.features.map((f) => ({ ...f, country: 'ch' }));
     const frFeatures = fr.features.map((f) => ({ ...f, country: 'fr' }));
-    const allFeatures = [...frFeatures, ...chFeatures];
+    const landFeatures = [...frFeatures, ...chFeatures];
     const fitGeo = {
       type: 'FeatureCollection',
-      features: [...allFeatures, ...lake.features],
+      features: [...landFeatures, ...lake.features],
     };
 
     const projection = d3.geoMercator().fitExtent(
@@ -223,44 +269,10 @@
     const path = d3.geoPath(projection);
 
     const gMap = svg.append('g').attr('class', 'map-layer');
+    drawBoundaries(gMap, path, lake.features, landFeatures);
+
     const gNodes = svg.append('g').attr('class', 'node-layer');
     const gLabels = svg.append('g').attr('class', 'label-layer');
-
-    gMap
-      .append('g')
-      .attr('class', 'lake-layer')
-      .selectAll('path.lake')
-      .data(lake.features)
-      .join('path')
-      .attr('class', 'lake')
-      .attr('d', path);
-
-    gMap
-      .append('g')
-      .attr('class', 'land-layer')
-      .selectAll('path.commune')
-      .data(allFeatures)
-      .join('path')
-      .attr('class', (d) => `commune ${d.country}`)
-      .attr('d', path);
-
-    gMap
-      .append('g')
-      .attr('class', 'border-layer')
-      .selectAll('path.commune-outline')
-      .data(allFeatures)
-      .join('path')
-      .attr('class', 'commune-outline')
-      .attr('d', path);
-
-    gMap
-      .append('g')
-      .attr('class', 'border-layer')
-      .selectAll('path.lake-outline')
-      .data(lake.features)
-      .join('path')
-      .attr('class', 'commune-outline')
-      .attr('d', path);
 
     const nodes = expandComputers();
     layoutAtSites(d3, nodes, projection);
@@ -276,6 +288,10 @@
       drawComputer(d3.select(this), d.type);
     });
 
+    // Outlines on top so communes stay visible under dense clusters
+    const gBorderTop = svg.append('g').attr('class', 'border-top').attr('pointer-events', 'none');
+    drawOutlinesOnly(gBorderTop, path, [...landFeatures, ...lake.features]);
+
     const detail = d3.select('#detail');
     const statTotal = d3.select('#stat-total');
 
@@ -286,11 +302,11 @@
         `<h3>${d.label}</h3>` +
         `<p class="fn-meta">${t.label} · ${d.region}</p>` +
         `<p class="fn-body">${d.detail}</p>` +
-        `<p class="fn-coord">站点 ${d.siteLat.toFixed(5)}°N, ${d.siteLon.toFixed(5)}°E</p>`
+        `<p class="fn-coord">Site ${d.siteLat.toFixed(5)}°N, ${d.siteLon.toFixed(5)}°E</p>`
       );
     }
 
-    statTotal.text(`${nodes.length} 台 · 7 个站点`);
+    statTotal.text(`${nodes.length} machines · 7 sites`);
 
     nodeSel
       .on('mouseenter', function (_, d) {
@@ -308,7 +324,7 @@
       })
       .attr('tabindex', 0)
       .attr('role', 'button')
-      .attr('aria-label', (d) => `${d.label}，${d.site}`);
+      .attr('aria-label', (d) => `${d.label}, ${d.site}`);
 
     gLabels
       .selectAll('g.site-label')
@@ -317,17 +333,22 @@
       .attr('class', 'site-label')
       .attr('transform', (d) => {
         const [x, y] = projection([d.lon, d.lat]);
-        return `translate(${x},${y - 18})`;
+        return `translate(${x},${y - 20})`;
       })
       .each(function (d) {
-        d3.select(this).append('text').attr('class', 'site-name').attr('y', 0).text(d.name.split(' · ')[0]);
+        d3.select(this)
+          .append('text')
+          .attr('class', 'site-name')
+          .attr('y', 0)
+          .attr('text-anchor', 'middle')
+          .text(d.name.split(' · ')[0]);
       });
   }
 
   function boot(attempts) {
     if (typeof window.d3 === 'undefined' || !window.CERN_GEO) {
       if (attempts > 240) {
-        showMapError('依赖脚本未就绪');
+        showMapError('Scripts not ready');
         return;
       }
       setTimeout(() => boot(attempts + 1), 25);
@@ -336,7 +357,7 @@
     try {
       initMap();
     } catch (err) {
-      showMapError(`地图加载失败：${err.message}`);
+      showMapError(`Map failed: ${err.message}`);
     }
   }
 
