@@ -1,0 +1,15 @@
+{
+  "terminals": [
+    {
+      "name": "docs-preview",
+      "command": "cd docs && python3 -m http.server 8080 --bind 0.0.0.0",
+      "description": "Static server for docs/cern-systems-1989.html on port 8080"
+    }
+  ],
+  "ports": [
+    {
+      "name": "CERN map preview",
+      "port": 8080
+    }
+  ]
+}
