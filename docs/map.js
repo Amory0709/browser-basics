@@ -82,10 +82,16 @@
   ];
 
   function showMapError(message) {
+    const stage = document.querySelector('.map-stage');
+    if (stage) {
+      stage.innerHTML = `<p class="map-error">${message}</p>`;
+      return;
+    }
     const map = document.getElementById('map');
-    if (!map) return;
-    map.innerHTML =
-      `<text x="${MAP.w / 2}" y="${MAP.h / 2}" text-anchor="middle" class="map-status">${message}</text>`;
+    if (map) {
+      map.innerHTML =
+        `<text x="${MAP.w / 2}" y="${MAP.h / 2}" text-anchor="middle" class="map-status">${message}</text>`;
+    }
   }
 
   function clusterRadius(count) {
