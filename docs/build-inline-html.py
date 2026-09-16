@@ -28,7 +28,11 @@ def main() -> None:
 """
     out = TEMPLATE.read_text(encoding="utf-8").replace("{{SCRIPTS}}", scripts)
     HTML.write_text(out, encoding="utf-8")
+    public_copy = ROOT.parent / "client" / "public" / "cern-systems-1989.html"
+    public_copy.parent.mkdir(parents=True, exist_ok=True)
+    public_copy.write_text(out, encoding="utf-8")
     print(f"Wrote {HTML} ({HTML.stat().st_size} bytes)")
+    print(f"Wrote {public_copy} ({public_copy.stat().st_size} bytes)")
 
 if __name__ == "__main__":
     main()

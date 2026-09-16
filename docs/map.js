@@ -151,6 +151,21 @@
     for (let i = 0; i < 150; i += 1) sim.tick();
   }
 
+  function mercatorProjection(d3, geojson, width, height, pad) {
+    const projection = d3.geoMercator();
+    const boundsPath = d3.geoPath().projection(projection);
+    const [[x0, y0], [x1, y1]] = boundsPath.bounds(geojson);
+    const dx = x1 - x0;
+    const dy = y1 - y0;
+    const midX = (x0 + x1) / 2;
+    const midY = (y0 + y1) / 2;
+    const scale =
+      0.95 / Math.max(dx / (width - 2 * pad), dy / (height - 2 * pad));
+    return projection
+      .scale(scale)
+      .translate([width / 2 - scale * midX, height / 2 - scale * midY]);
+  }
+
   function paintBoundaries(g, path, features, stroke, dash) {
     const sel = g
       .selectAll('path')
@@ -178,7 +193,7 @@
       .style('background', 'transparent')
       .style('outline', 'none');
 
-    const { ch, fr, lake } = window.CERN_GEO;
+    const { ch, fr } = window.CERN_GEO;
     if (!ch?.features?.length || !fr?.features?.length) {
       throw new Error('GeoJSON communes empty');
     }
@@ -187,21 +202,15 @@
     const frF = fr.features.map((f) => ({ ...f, country: 'fr' }));
     const fit = {
       type: 'FeatureCollection',
-      features: [...frF, ...chF, ...(lake?.features || [])],
+      features: [...frF, ...chF],
     };
 
-    const projection = d3.geoMercator().fitExtent(
-      [[MAP.pad, MAP.pad], [MAP.w - MAP.pad, MAP.h - MAP.pad]],
-      fit
-    );
+    const projection = mercatorProjection(d3, fit, MAP.w, MAP.h, MAP.pad);
     const path = d3.geoPath(projection);
 
     const gBase = svg.append('g').attr('class', 'basemap');
     paintBoundaries(gBase.append('g'), path, frF, PALETTE.line);
     paintBoundaries(gBase.append('g'), path, chF, PALETTE.line);
-    if (lake?.features?.length) {
-      paintBoundaries(gBase.append('g'), path, lake.features, PALETTE.lineLight, '5 4');
-    }
 
     gBase
       .append('text')

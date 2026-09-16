@@ -59,6 +59,16 @@
       border: 0;
       background: none;
       box-shadow: none;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) min(280px, 34%);
+      gap: 0.75rem;
+      align-items: start;
+    }
+
+    @media (max-width: 900px) {
+      .map-stage {
+        grid-template-columns: 1fr;
+      }
     }
 
     #map,
@@ -119,11 +129,9 @@
     }
 
     .hud {
-      position: absolute;
-      top: 0.5rem;
-      right: 0.5rem;
-      width: min(280px, calc(100% - 1rem));
-      padding: 0;
+      position: static;
+      width: auto;
+      padding: 0 0.5rem 0 0;
       border: none;
       background: transparent;
       box-shadow: none;
@@ -226,15 +234,6 @@
     }
 
     footer a { color: var(--accent); }
-
-    @media (max-width: 720px) {
-      .hud {
-        position: static;
-        width: 100%;
-        margin-top: 0.5rem;
-        padding: 0 0.75rem;
-      }
-    }
   </style>
 </head>
 <body>
@@ -282,7 +281,9 @@
 
   <footer>
     <p><strong>Preview:</strong>
-      <a href="https://rawcdn.githack.com/Amory0709/browser-basics/cursor/frontend-history-eras-e726/docs/cern-systems-1989.html">Open live map (direct HTML)</a>
+      <a href="https://Amory0709.github.io/browser-basics/cern-systems-1989.html">GitHub Pages (after merge to main)</a>
+      ·
+      <a href="http://localhost:8080/cern-systems-1989.html">localhost:8080</a>
     </p>
     <p>
       <a href="PREVIEW.md">Preview notes</a> ·
