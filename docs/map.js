@@ -1,7 +1,7 @@
 (function () {
-  const MAP = { w: 1400, h: 860, pad: 24, stackPadTop: 80 };
+  const MAP = { w: 1400, h: 920, pad: 24, stackPadTop: 80 };
 
-  const STACK = { minStep: 0.42, maxStep: 3.4, maxRise: 118 };
+  const STACK = { maxColumn: 300, minColumn: 36, maxStep: 11 };
 
   const PALETTE = {
     line: '#525252',
@@ -95,8 +95,24 @@
     }
   }
 
-  function stackStep(count) {
-    return Math.min(STACK.maxStep, Math.max(STACK.minStep, STACK.maxRise / Math.max(count, 1)));
+  function siteStackMetrics(count) {
+    const colH = Math.min(
+      STACK.maxColumn,
+      Math.max(STACK.minColumn, count * 2.4)
+    );
+    const step = Math.min(STACK.maxStep, colH / Math.max(count, 1));
+    const towerH = Math.max(2.4, step * 0.9);
+    const towerW = Math.min(6, Math.max(3, step * 1.05));
+    return { step, towerH, towerW, colH };
+  }
+
+  function maxSiteColumnHeight() {
+    return Math.max(
+      STACK.minColumn,
+      ...sites.map((s) =>
+        siteStackMetrics(s.groups.reduce((n, g) => n + g.count, 0)).colH
+      )
+    );
   }
 
   function expandComputers() {
@@ -134,14 +150,17 @@
       const ground = siteGround.get(siteId);
       if (!ground) return;
       const { cx, cy } = ground;
-      const step = stackStep(list.length);
+      const { step, towerH, towerW } = siteStackMetrics(list.length);
       list.sort((a, b) => a.id.localeCompare(b.id));
       list.forEach((node, i) => {
         node.groundX = cx;
         node.groundY = cy;
         node.stackIndex = i;
         node.stackTotal = list.length;
-        node.gx = cx + i * STACK.depth;
+        node.stackStep = step;
+        node.towerH = towerH;
+        node.towerW = towerW;
+        node.gx = cx;
         node.gy = cy - i * step;
       });
     });
@@ -219,6 +238,8 @@
       features: [...frF, ...chF],
     };
 
+    MAP.stackPadTop = maxSiteColumnHeight() + 28;
+
     const projection = d3.geoMercator().fitExtent(
       [[MAP.pad, MAP.pad + MAP.stackPadTop], [MAP.w - MAP.pad, MAP.h - MAP.pad]],
       fit
@@ -260,6 +281,20 @@
       .attr('ry', 2.2)
       .attr('fill', 'rgba(28,25,23,0.07)');
 
+    const gSiteRings = svg.append('g').attr('class', 'site-rings');
+    gSiteRings
+      .selectAll('circle.site-ring')
+      .data(sites)
+      .join('circle')
+      .attr('class', 'site-ring')
+      .attr('cx', (d) => projection([d.lon, d.lat])[0])
+      .attr('cy', (d) => projection([d.lon, d.lat])[1])
+      .attr('r', 4)
+      .attr('fill', 'none')
+      .attr('stroke', '#0014dc')
+      .attr('stroke-width', 1.1)
+      .attr('opacity', 0.9);
+
     const gNodes = svg.append('g').attr('class', 'nodes');
     const machines = gNodes
       .selectAll('g.machine')
@@ -267,69 +302,55 @@
       .join('g')
       .attr('class', 'machine')
       .attr('transform', (d) => `translate(${d.gx},${d.gy})`)
-      .sort((a, b) => a.gy + a.gx - (b.gy + b.gx));
+      .sort((a, b) => a.stackIndex - b.stackIndex);
 
     machines.each(function (d) {
       const g = d3.select(this);
       const col = (TYPE[d.type] || TYPE.pc).color;
+      const w = d.towerW;
+      const h = d.towerH;
+      const hw = w / 2;
       g.append('ellipse')
         .attr('class', 'machine-shadow')
         .attr('cx', 0)
-        .attr('cy', 2.6)
-        .attr('rx', 2.4)
-        .attr('ry', 1.1)
-        .attr('fill', 'rgba(0,0,0,0.14)');
+        .attr('cy', 2.4)
+        .attr('rx', hw + 0.8)
+        .attr('ry', 1.2)
+        .attr('fill', 'rgba(0,0,0,0.16)');
       g.append('rect')
         .attr('class', 'machine-tower')
-        .attr('x', -1.6)
-        .attr('y', -8.5)
-        .attr('width', 3.2)
-        .attr('height', 8.5)
-        .attr('rx', 0.6)
+        .attr('x', -hw)
+        .attr('y', -h)
+        .attr('width', w)
+        .attr('height', h)
+        .attr('rx', Math.min(0.8, w * 0.15))
         .attr('fill', col)
         .attr('stroke', '#fff')
-        .attr('stroke-width', 0.35);
+        .attr('stroke-width', 0.45);
       g.append('rect')
         .attr('class', 'machine-screen')
-        .attr('x', -1.1)
-        .attr('y', -7.6)
-        .attr('width', 2.2)
-        .attr('height', 5.2)
-        .attr('rx', 0.35)
-        .attr('fill', '#fafafa')
-        .attr('opacity', 0.92);
+        .attr('x', -hw * 0.72)
+        .attr('y', -h * 0.88)
+        .attr('width', w * 0.72)
+        .attr('height', h * 0.62)
+        .attr('rx', 0.25)
+        .attr('fill', '#f8fafc')
+        .attr('opacity', 0.95);
     });
 
-    const gSites = svg.append('g').attr('class', 'site-markers');
-    gSites
-      .selectAll('g.site')
+    const gSiteRings = svg.append('g').attr('class', 'site-rings');
+    gSiteRings
+      .selectAll('circle.site-ring')
       .data(sites)
-      .join('g')
-      .attr('class', 'site')
-      .attr('transform', (d) => {
-        const [x, y] = projection([d.lon, d.lat]);
-        return `translate(${x},${y})`;
-      })
-      .each(function (d) {
-        const g = d3.select(this);
-        const total = d.groups.reduce((s, gr) => s + gr.count, 0);
-        g.append('circle')
-          .attr('r', 4)
-          .attr('fill', 'none')
-          .attr('stroke', '#0014dc')
-          .attr('stroke-width', 1)
-          .attr('opacity', 0.85);
-        g.append('text')
-          .attr('y', -12)
-          .attr('text-anchor', 'middle')
-          .attr('class', 'site-name')
-          .text(d.name.split(' · ')[0]);
-        g.append('text')
-          .attr('y', 18)
-          .attr('text-anchor', 'middle')
-          .attr('class', 'site-count')
-          .text(`${total}`);
-      });
+      .join('circle')
+      .attr('class', 'site-ring')
+      .attr('cx', (d) => projection([d.lon, d.lat])[0])
+      .attr('cy', (d) => projection([d.lon, d.lat])[1])
+      .attr('r', 4)
+      .attr('fill', 'none')
+      .attr('stroke', '#0014dc')
+      .attr('stroke-width', 1.1)
+      .attr('opacity', 0.9);
 
     const detail = d3.select('#detail');
     d3.select('#stat-total').text(`${nodes.length} machines · ${sites.length} sites`);
