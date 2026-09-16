@@ -151,21 +151,37 @@
     for (let i = 0; i < 150; i += 1) sim.tick();
   }
 
-  function mercatorProjection(d3, geojson, width, height, pad) {
-    const innerW = width - 2 * pad;
-    const innerH = height - 2 * pad;
-    const projection = d3.geoMercator();
-    const boundsPath = d3.geoPath().projection(projection);
-    const [[x0, y0], [x1, y1]] = boundsPath.bounds(geojson);
-    const dx = x1 - x0;
-    const dy = y1 - y0;
-    const k = 0.95 / Math.max(dx / innerW, dy / innerH);
-    projection.scale(projection.scale() * k);
-    projection.translate([
-      pad + (innerW - k * dx) / 2 - k * x0,
-      pad + (innerH - k * dy) / 2 - k * y0,
-    ]);
-    return projection;
+  function fixRing(d3, ring, isExterior) {
+    const area = d3.geoArea({
+      type: 'Feature',
+      geometry: { type: 'Polygon', coordinates: [ring] },
+    });
+    const coversHemisphere = area > Math.PI;
+    if (isExterior && coversHemisphere) return ring.slice().reverse();
+    if (!isExterior && !coversHemisphere) return ring.slice().reverse();
+    return ring;
+  }
+
+  function rewindGeometry(d3, geometry) {
+    if (geometry.type === 'Polygon') {
+      return {
+        ...geometry,
+        coordinates: geometry.coordinates.map((ring, i) => fixRing(d3, ring, i === 0)),
+      };
+    }
+    if (geometry.type === 'MultiPolygon') {
+      return {
+        ...geometry,
+        coordinates: geometry.coordinates.map((poly) =>
+          poly.map((ring, i) => fixRing(d3, ring, i === 0))
+        ),
+      };
+    }
+    return geometry;
+  }
+
+  function rewindFeature(d3, feature) {
+    return { ...feature, geometry: rewindGeometry(d3, feature.geometry) };
   }
 
   function paintBoundaries(g, path, features, stroke, dash) {
@@ -200,14 +216,17 @@
       throw new Error('GeoJSON communes empty');
     }
 
-    const chF = ch.features.map((f) => ({ ...f, country: 'ch' }));
-    const frF = fr.features.map((f) => ({ ...f, country: 'fr' }));
+    const chF = ch.features.map((f) => rewindFeature(d3, { ...f, country: 'ch' }));
+    const frF = fr.features.map((f) => rewindFeature(d3, { ...f, country: 'fr' }));
     const fit = {
       type: 'FeatureCollection',
       features: [...frF, ...chF],
     };
 
-    const projection = mercatorProjection(d3, fit, MAP.w, MAP.h, MAP.pad);
+    const projection = d3.geoMercator().fitExtent(
+      [[MAP.pad, MAP.pad], [MAP.w - MAP.pad, MAP.h - MAP.pad]],
+      fit
+    );
     const path = d3.geoPath(projection);
 
     const gBase = svg.append('g').attr('class', 'basemap');
